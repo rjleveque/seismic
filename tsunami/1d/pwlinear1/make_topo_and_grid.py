@@ -22,7 +22,8 @@ z0_shore = 0.         # depth at x0_shore
 
 ## Used by sloping_fault code to define seafloor so topo matches
 def get_seafloor_parameters():
-    return x0, x0_slope, x0_shelf, x0_beach, x0_shore, x1
+    return x0, x0_slope, x0_shelf, x0_beach, x0_shore, x1, \
+	z0_ocean, z0_shelf, z0_beach, z0_shore
 
 if x0_beach != x0_shelf:
     slope_of_shelf = (z0_beach - z0_shelf) / (x0_beach - x0_shelf)
