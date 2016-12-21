@@ -25,9 +25,6 @@ xp2 = xcenter + 0.5*width*np.cos(theta)
 yp1 = ycenter + 0.5*width*np.sin(theta)
 yp2 = ycenter - 0.5*width*np.sin(theta)
 
-xlimits = [xcenter-0.5*probdata.domain_width,xcenter+0.5*probdata.domain_width]
-ylimits = [-probdata.domain_depth,0.0]
-
 #--------------------------
 def setplot(plotdata):
 #--------------------------
@@ -121,8 +118,8 @@ def setplot(plotdata):
     # Set up for axes in this figure:
     plotaxes = plotfigure.new_plotaxes()
     plotaxes.axescmd = 'subplot(211)'
-    plotaxes.xlimits = xlimits
-    plotaxes.ylimits = ylimits
+    plotaxes.xlimits = 'auto'
+    plotaxes.ylimits = 'auto'
     plotaxes.title = '-trace(sigma)'
     plotaxes.scaled = True
     plotaxes.afteraxes = plot_interfaces
@@ -143,8 +140,8 @@ def setplot(plotdata):
     # Set up for axes in this figure:
     plotaxes = plotfigure.new_plotaxes()
     plotaxes.axescmd = 'subplot(212)'
-    plotaxes.xlimits = xlimits
-    plotaxes.ylimits = ylimits
+    plotaxes.xlimits = 'auto'
+    plotaxes.ylimits = 'auto'
     plotaxes.title = 'y-velocity'
     plotaxes.scaled = True
     plotaxes.afteraxes = plot_interfaces
@@ -259,8 +256,8 @@ def setplot(plotdata):
     # Figure for y-velocity:
     plotaxes = plotfigure.new_plotaxes()
     plotaxes.axescmd = 'subplot(515)'
-    plotaxes.xlimits = xlimits
-    plotaxes.ylimits = ylimits
+    plotaxes.xlimits = 'auto'
+    plotaxes.ylimits = 'auto'
     plotaxes.title = 'y-velocity'
     plotaxes.scaled = True
     #plotaxes.afteraxes = plot_interfaces
@@ -285,8 +282,8 @@ def setplot(plotdata):
 
     # Set up for axes in this figure:
     plotaxes = plotfigure.new_plotaxes()
-    plotaxes.xlimits = xlimits
-    plotaxes.ylimits = ylimits
+    plotaxes.xlimits = 'auto'
+    plotaxes.ylimits = 'auto'
     plotaxes.title = 'Level 4 grid patches'
     plotaxes.scaled = True
 

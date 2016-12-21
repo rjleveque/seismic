@@ -8,15 +8,18 @@ fault.subfaults = []
 # Read in fault info
 probdata = ClawData()
 probdata.read('setprob.data',force=True)
+data = ClawData()
+data.read('claw.data',force=True)
 
 width = probdata.fault_width
 theta = probdata.fault_dip
 xcenter = probdata.fault_center
 ycenter = probdata.fault_depth
-domain_width = probdata.domain_width
+fault_horiz = width*cos(theta)
 ndip = 50
 
-dlongitude = (width/111.e3) / ndip   # convert to degees and split up
+startlongitude = (xcenter - 0.5*fault_horiz)/111.e3
+dlongitude = (fault_horiz/111.e3) / ndip   # convert to degees and split up
 sf_width = width/ndip
 x = arange(xcenter-0.5*width,xcenter+0.5*width,sf_width)
 slip = exp(-((x-xcenter)/(0.5*width))**2)
@@ -31,7 +34,7 @@ for i in range(ndip):
     subfault.rake = 90
     subfault.strike = 0
     subfault.length = 1000e3
-    subfault.longitude = dlongitude*i
+    subfault.longitude = startlongitude + dlongitude*i
     subfault.latitude = 0.
     subfault.coordinate_specification = 'top center'
     subfault.calculate_geometry()
@@ -41,7 +44,7 @@ for i in range(ndip):
 
 print "Mw = ", fault.Mw()
 
-x = linspace(-1.5,1.5,1000)
+x = linspace(data.lower[0]/111.e3,data.upper[0]/111.e3,1000)
 y = array([0.])
 times = [1.]
 dtopo = fault.create_dtopography(x,y,times,horiz_disp=True)

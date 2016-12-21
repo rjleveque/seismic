@@ -32,17 +32,58 @@ def setrun(claw_pkg='amrclaw'):
     num_dim = 2
     rundata = data.ClawRunData(claw_pkg, num_dim)
 
+    # Specify which topography to use (set topography to False for flat surface)
+    topography = True
+    if (topography):
+        import imp
+        make_topo_and_grid = imp.load_source('make_topo_and_grid',\
+        '../../tsunami/1d/pwlinear1/make_topo_and_grid.py')
+        from make_topo_and_grid import get_seafloor_parameters
+
     #------------------------------------------------------------------
     # Problem-specific parameters to be written to setprob.data:
     #------------------------------------------------------------------
     # Sample setup to write one line to setprob.data ...
     probdata = rundata.new_UserData(name='probdata',fname='setprob.data')
-    probdata.add_param('domain_depth', 200e3, 'depth of domain')
-    probdata.add_param('domain_width', 400e3, 'width of domain')
-    probdata.add_param('fault_center', 25e3, 'center of fault')
+    if (topography):
+        xlower, xslope_lower, xshelf_lower, xbeach_lower, xshore_lower, xupper, \
+            ybasin_lower, yshelf_lower, ybeach_lower, yshore_lower \
+             = get_seafloor_parameters()
+        xlower = -250.0e3
+        xupper = 150.0e3
+        fault_offset = xshelf_lower
+        domain_depth = 200e3
+    else:
+        xlower = -250.0e3
+        xslope_lower = -65.0e3
+        xshelf_lower = -45.0e3
+        xbeach_lower = -5.0e3
+        xshore_lower = 0.0
+        xupper = 150.0e3
+        ybasin_lower = 0.0
+        yshelf_lower = 0.0
+        ybeach_lower = 0.0
+        yshore_lower = 0.0
+        fault_offset = -45.0e3
+        domain_depth = 200.0e3
+
+    probdata.add_param('fault_center', fault_offset + 25.0e3, 'center of fault')
     probdata.add_param('fault_width', 50735, 'width of fault')
     probdata.add_param('fault_dip', 0.17, 'angle of fault dip')
-    probdata.add_param('fault_depth', 19.3e3, 'depth of fault')
+    probdata.add_param('fault_depth', 19.0e3, 'depth of fault')
+    probdata.add_param('basin_center', 0.5*(xlower + xslope_lower), 'center of basin')
+    probdata.add_param('basin_width', xslope_lower-xlower, 'width of basin')
+    probdata.add_param('basin_elevation', ybasin_lower, 'elevation of basin')
+    probdata.add_param('slope_center', 0.5*(xslope_lower + xshelf_lower), 'center of slope')
+    probdata.add_param('slope_width', xshelf_lower - xslope_lower, 'width of slope')
+    probdata.add_param('shelf_center', 0.5*(xshelf_lower + xbeach_lower), 'center pf shelf')
+    probdata.add_param('shelf_width', xbeach_lower - xshelf_lower, 'width of shelf')
+    probdata.add_param('shelf_elevation', yshelf_lower, 'elevation of shelf')
+    probdata.add_param('beach_center',0.5*(xbeach_lower + xshore_lower), 'center of beach')
+    probdata.add_param('beach_width', xshore_lower - xbeach_lower, 'width of beach')
+    probdata.add_param('shore_elevation', yshore_lower, 'elevation of shore')
+
+
 
     #------------------------------------------------------------------
     # Standard Clawpack parameters to be written to claw.data:
@@ -64,18 +105,18 @@ def setrun(claw_pkg='amrclaw'):
     ## specify dy using dx
     num_cells_above = np.rint(probdata.fault_depth/dx)
     dy = probdata.fault_depth/num_cells_above
-    clawdata.num_cells[0] = int(np.ceil(probdata.domain_width/dx))
-    clawdata.num_cells[1] = int(np.ceil(probdata.domain_depth/dy)) # my
+    num_cells_left = int(np.ceil((probdata.fault_center - 0.5*probdata.fault_width - xlower)/dx))
+    num_cells_right = int(np.ceil((xupper - probdata.fault_center - 0.5*probdata.fault_width)/dx))
+    clawdata.num_cells[0] = num_cells_left + num_cells_fault + num_cells_right
+    clawdata.num_cells[1] = int(np.ceil(domain_depth/dy)) # my
 
     # Lower and upper edge of computational domain:
     ## note the size of domain is likely expanded here
-    num_cells_remain = clawdata.num_cells[0] - num_cells_fault
-    clawdata.lower[0] = probdata.fault_center-0.5*probdata.fault_width - np.floor(num_cells_remain/2.0)*dx   # xlower
-    clawdata.upper[0] = probdata.fault_center+0.5*probdata.fault_width + np.ceil(num_cells_remain/2.0)*dx     # xupper
+    clawdata.lower[0] = probdata.fault_center - 0.5*probdata.fault_width - num_cells_left*dx   # xlower
+    clawdata.upper[0] = probdata.fault_center + 0.5*probdata.fault_width + num_cells_right*dx     # xupper
     clawdata.lower[1] = -clawdata.num_cells[1]*dy       # ylower
     clawdata.upper[1] = 0.0          # yupper
-    probdata.domain_width = clawdata.upper[0] - clawdata.lower[0]
-    probdata.domain_depth = clawdata.upper[1] - clawdata.lower[1]
+    domain_depth = clawdata.upper[1] - clawdata.lower[1]
 
     # ---------------
     # Size of system:
@@ -166,7 +207,7 @@ def setrun(claw_pkg='amrclaw'):
 
     # Initial time step for variable dt.
     # (If dt_variable==0 then dt=dt_initial for all steps)
-    clawdata.dt_initial = 0.25
+    clawdata.dt_initial = 1e-6
 
     # Max time step to be allowed if variable dt used:
     clawdata.dt_max = 1.000000e+99
@@ -356,8 +397,8 @@ def setrun(claw_pkg='amrclaw'):
     xcb = [probdata.fault_center-xbuffer,probdata.fault_center+xbuffer]
 
     # high-resolution region to surround the fault during slip
-    regions.append([amrdata.amr_levels_max,amrdata.amr_levels_max, 0,1, 
-                    xcb[0],xcb[1], 
+    regions.append([amrdata.amr_levels_max,amrdata.amr_levels_max, 0,1,
+                    xcb[0],xcb[1],
                     -probdata.fault_depth-dx, -probdata.fault_depth+dx])
 
     for j in range(amrdata.amr_levels_max-1):
