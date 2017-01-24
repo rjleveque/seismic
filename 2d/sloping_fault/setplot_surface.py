@@ -40,6 +40,9 @@ def setplot(plotdata):
     probdata.read('setprob.data',force=True)
     xlimits = [xcenter-0.5*probdata.domain_width,xcenter+0.5*probdata.domain_width]
     ylimits = [-probdata.domain_depth,0.0]
+    abl_depth = probdata.abl_depth
+    xlimits_trunc = [xlimits[0]+abl_depth,xlimits[1]-abl_depth]
+    ylimits_trunc = [ylimits[0]+abl_depth,ylimits[1]]
 
     from clawpack.visclaw import colormaps
 
@@ -56,7 +59,7 @@ def setplot(plotdata):
     fault.create_dtopography(xc/LAT2METER,np.array([0.]),[1.0],y_disp=True)
 
     def plot_vertical_displacement(current_data):
-        from pylab import plot,zeros,gca
+        from pylab import plot,zeros,gca,legend
         t = current_data.t
 
         ys = zeros(ngauges)
@@ -73,26 +76,7 @@ def setplot(plotdata):
         plot(xc[:ngauges],ys,**kwargs)
         kwargs = {'linestyle':'--','color':'r','label':'Okada'}
         fault.plot_okada(ax,displacement='vertical',kwargs=kwargs)
-
-    def plot_interfaces(current_data):
-        from pylab import plot,zeros,gca,tick_params
-        t = current_data.t
-
-        ys = zeros(ngauges)
-        for gaugeno in range(ngauges):
-            g = plotdata.getgauge(gaugeno)
-            for k in range(1,len(g.t)):
-                if g.t[k] > t:
-                    break
-                dt = g.t[k] - g.t[k-1]
-                v = 0.5*(g.q[4,k]+g.q[4,k-1])
-                ys[gaugeno] += dt*v
-        ax = gca()
-        plot(xc[:ngauges],ys,linewidth=3)
-        kwargs = {'linestyle':'--','color':'r','linewidth':3}
-        fault.plot_okada(ax,displacement='vertical',kwargs=kwargs)
-        tick_params(labelsize=20)
-
+        legend()
 
     def plot_fault(current_data):
         from pylab import linspace, plot
@@ -139,10 +123,42 @@ def setplot(plotdata):
     plotitem.MappedGrid = True
     plotitem.mapc2p = mapping.mapc2p
 
+    # Figure for surfaces and p-waves
+    plotfigure = plotdata.new_plotfigure(name='surface_and_p_waves (truncated)', figno=2)
+    plotfigure.kwargs = {'figsize':(8,8)}
 
+    # Set axes for vertical displacement:
+    plotaxes = plotfigure.new_plotaxes()
+    plotaxes.axescmd = 'subplot(211)'
+    plotaxes.xlimits = xlimits_trunc
+    plotaxes.ylimits = [-0.3, 0.5]
+    plotaxes.title = 'vertical displacement'
+    plotaxes.scaled = False
+    plotaxes.afteraxes = plot_vertical_displacement
+
+    # Set axes for p waves:
+    plotaxes = plotfigure.new_plotaxes()
+    plotaxes.axescmd = 'subplot(212)'
+    plotaxes.xlimits = xlimits_trunc
+    plotaxes.ylimits = ylimits_trunc
+    plotaxes.title = '-trace(sigma)'
+    plotaxes.scaled = True
+    plotaxes.afteraxes = plot_fault
+
+    # Set up for item on these axes:
+    plotitem = plotaxes.new_plotitem(plot_type='2d_pcolor')
+    plotitem.plot_var = sigmatr
+    plotitem.pcolor_cmap = colormaps.blue_white_red
+    plotitem.pcolor_cmin = -1e6
+    plotitem.pcolor_cmax = 1e6
+    plotitem.add_colorbar = False
+    plotitem.amr_celledges_show = [0]
+    plotitem.amr_patchedges_show = [0]
+    plotitem.MappedGrid = True
+    plotitem.mapc2p = mapping.mapc2p
 
     # Figure for grid cells
-    plotfigure = plotdata.new_plotfigure(name='cells', figno=2)
+    plotfigure = plotdata.new_plotfigure(name='cells', figno=3)
 
     # Set up for axes in this figure:
     plotaxes = plotfigure.new_plotaxes()
@@ -150,6 +166,7 @@ def setplot(plotdata):
     plotaxes.ylimits = ylimits
     plotaxes.title = 'Level 4 grid patches'
     plotaxes.scaled = True
+    plotaxes.afteraxes = plot_fault
 
     # Set up for item on these axes:
     plotitem = plotaxes.new_plotitem(plot_type='2d_patch')

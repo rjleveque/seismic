@@ -39,8 +39,9 @@ def setrun(claw_pkg='amrclaw'):
     # Problem-specific parameters to be written to setprob.data:
     #------------------------------------------------------------------
     probdata = rundata.new_UserData(name='probdata',fname='setprob.data')
-    probdata.add_param('domain_depth', 300e3, 'depth of domain')
-    probdata.add_param('domain_width', 600e3, 'width of domain')
+    probdata.add_param('abl_depth', 50e3, 'depth of absorbing layer')
+    probdata.add_param('domain_depth', 50e3, 'depth of domain')
+    probdata.add_param('domain_width', 300e3, 'width of domain')
 
     #------------------------------------------------------------------
     # Read in fault information
@@ -72,7 +73,7 @@ def setrun(claw_pkg='amrclaw'):
     clawdata.num_dim = num_dim
 
     # Number of grid cells:
-    num_cells_fault = 10
+    num_cells_fault = 5
     dx = fault_width/num_cells_fault
 
     # determine cell number and set computational boundaries
@@ -91,6 +92,15 @@ def setrun(claw_pkg='amrclaw'):
     clawdata.upper[1] = 0.0
     clawdata.num_cells[1] = int(num_cells_below + num_cells_above)
 
+    # add absorbing layer
+    target_num_cells = np.rint(probdata.abl_depth/dx)
+    clawdata.lower[0] -= target_num_cells*dx
+    clawdata.upper[0] += target_num_cells*dx
+    clawdata.num_cells[0] += 2*int(target_num_cells)
+    target_num_cells = np.rint(probdata.abl_depth/dy)
+    clawdata.lower[1] -= target_num_cells*dy
+    clawdata.num_cells[1] += int(target_num_cells)
+
     # adjust probdata
     probdata.domain_width = clawdata.upper[0] - clawdata.lower[0]
     probdata.domain_depth = clawdata.upper[1] - clawdata.lower[1]
@@ -103,7 +113,7 @@ def setrun(claw_pkg='amrclaw'):
     clawdata.num_eqn = 5
 
     # Number of auxiliary variables in the aux array (initialized in setaux)
-    clawdata.num_aux = 13
+    clawdata.num_aux = 15
 
     # Index of aux array corresponding to capacity function, if there is one:
     clawdata.capa_index = 12
@@ -268,22 +278,7 @@ def setrun(claw_pkg='amrclaw'):
                             np.rint(probdata.domain_width/1e3))
     for gaugeno,x in enumerate(xgauges):
         gauges.append([gaugeno,x,clawdata.upper[1]-1,0,1e10])
-    ## bottom edge:
-    #for gaugeno,x in enumerate(xgauges):
-    #    gauges.append([200+gaugeno,x,clawdata.lower[1]+1000,0,1e10])
 
-    ## above fault plane:
-    #xgauges = np.linspace(probdata.fault_center-0.5*probdata.fault_width,
-    #                        probdata.fault_center+0.5*probdata.fault_width)
-    #for gaugeno,x in enumerate(xgauges):
-    #    gauges.append([300+gaugeno,x,-probdata.fault_depth+1,0,1e10])
-
-    # below fault plane:
-    #for gaugeno,x in enumerate(xgauges):
-    #    gauges.append([400+gaugeno,x,-probdata.fault_depth-1,0,1e10])
-
-
-    # --------------
     # Checkpointing:
     # --------------
 
@@ -317,13 +312,13 @@ def setrun(claw_pkg='amrclaw'):
     amrdata = rundata.amrdata
 
     # max number of refinement levels:
-    amrdata.amr_levels_max = 6
+    amrdata.amr_levels_max = 3
 
     # List of refinement ratios at each level (length at least
     # amr_level_max-1)
-    amrdata.refinement_ratios_x = [2,2,2,2,2]
-    amrdata.refinement_ratios_y = [2,2,2,2,2]
-    amrdata.refinement_ratios_t = [2,2,2,2,2]
+    amrdata.refinement_ratios_x = [8,8]
+    amrdata.refinement_ratios_y = [8,8]
+    amrdata.refinement_ratios_t = [8,8]
 
 
     # Specify type of each aux variable in amrdata.auxtype.
@@ -332,7 +327,7 @@ def setrun(claw_pkg='amrclaw'):
     #   'center',  'capacity', 'xleft', or 'yleft'  (see documentation).
     amrdata.aux_type = ['center', 'center', 'center', 'center', 'center', \
         'center', 'center', 'center', 'center', 'center', 'center', \
-        'capacity','yleft']
+        'capacity','yleft','xleft','yleft']
 
 
 
@@ -370,21 +365,13 @@ def setrun(claw_pkg='amrclaw'):
     regions = rundata.regiondata.regions
     # to specify regions of refinement append lines of the form
     #  [minlevel,maxlevel,t1,t2,x1,x2,y1,y2]
-    ybuffer = dy
-
     # high-resolution region to surround the fault during slip
     regions.append([amrdata.amr_levels_max,amrdata.amr_levels_max,
                     0,rupture_rise_time,
                     fault_center-0.5*fault_width,fault_center+0.5*fault_width,
                     -fault_depth-dx, -fault_depth+dx])
+    regions.append([0, 10, 0, 1e9, -1e9, 1e9, -1e9, 1e9])
 
-    for j in range(amrdata.amr_levels_max-1):
-        regions.append([1,amrdata.amr_levels_max-j,
-                    0,1e9,
-                    -1e9,1e9,
-                    -2.0*fault_depth-j*ybuffer,0.0])
-
-    regions.append([1,1, 0,1e9, -1.e9,1.e9, -1.e9,0.0])
     #  ----- For developers -----
     # Toggle debugging print statements:
     amrdata.dprint = False      # print domain flags

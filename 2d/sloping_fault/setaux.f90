@@ -9,9 +9,12 @@ subroutine setaux(mbc,mx,my,xlower,ylower,dx,dy,maux,aux)
 
     real(kind=8) :: rho_cell, lambda_cell, mu_cell
 
+    real(kind=8) :: ABLdepth, ABLxpos(2), ABLypos
+    common /ablparam/ ABLdepth, ABLxpos, ABLypos
+
     ! Arrays to temporarily store computational and physical corners of grid cells
     real(kind=8) :: xccorn(4),yccorn(4),xpcorn(4),ypcorn(4)
-    real(kind=8) :: norm, xn, yn, areap, b2c
+    real(kind=8) :: norm, xn, yn, areap, pi2
 
 ! c     #   (lambda = nu*E/((1+nu)(1-2nu))), E=young modulus, nu=poisson ration
 ! c     #   aux(1,i,j) is the density of the elastic material
@@ -32,6 +35,9 @@ subroutine setaux(mbc,mx,my,xlower,ylower,dx,dy,maux,aux)
 ! c     #   aux(12,i,j) = kappa  is ratio of cell area to dx*dy
 !
 ! c     #   aux(13,i,j) = slip:
+
+! c     #   aux(14,i,j) = abl factor in x direction:
+! c     #   aux(15,i,j) = abl factor in y direction:
     !
 
     lambda_cell = 60.d9  ! Pa
@@ -39,11 +45,13 @@ subroutine setaux(mbc,mx,my,xlower,ylower,dx,dy,maux,aux)
     rho_cell = 2500.d0   ! kg/m**3
     cp = dsqrt((lambda_cell + 2*mu_cell)/rho_cell)
     cs = dsqrt(mu_cell/rho_cell)
+    pi2 = 2.d0*datan(1.d0)
 
     ! Loop over all cells
       do j=1-mbc,my + mbc
         ycell = ylower + (j-0.5d0)*dy
         do i=1-mbc,mx + mbc
+          xcell = xlower + (i-0.5d0)*dx
 
           aux(1,i,j) = rho_cell
           aux(2,i,j) = lambda_cell
@@ -108,6 +116,26 @@ subroutine setaux(mbc,mx,my,xlower,ylower,dx,dy,maux,aux)
 
           ! Initialize slip to zero
           aux(13,i,j) = 0.d0
+
+          ! set absorbing layer factor in x direction
+          if (ABLdepth > 1.d-10) then
+            if (xcell .le. ABLxpos(1)) then
+              aux(14,i,j) = 1.d0/(1.d0 + dtan(pi2*(ABLxpos(1) - xcell)/ABLdepth)**2)
+            elseif (xcell .ge. ABLxpos(2)) then
+              aux(14,i,j) = 1.d0/(1.d0 + dtan(pi2*(xcell - ABLxpos(2))/ABLdepth)**2)
+            else
+              aux(14,i,j) = 1.d0
+            end if
+          end if
+
+          ! set absorbing layer factor in y direction
+          if (ABLdepth > 1.d-10) then
+            if (ycell .le. ABLypos) then
+              aux(15,i,j) = 1.d0/(1.d0 + dtan(pi2*(ABLypos - ycell)/ABLdepth)**2)
+            else
+              aux(15,i,j) = 1.d0
+            end if
+          end if
 
         end do
       end do

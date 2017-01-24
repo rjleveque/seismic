@@ -40,6 +40,9 @@ def setplot(plotdata):
     probdata.read('setprob.data',force=True)
     xlimits = [xcenter-0.5*probdata.domain_width,xcenter+0.5*probdata.domain_width]
     ylimits = [-probdata.domain_depth,0.0]
+    abl_depth = probdata.abl_depth
+    xlimits_trunc = [xlimits[0]+abl_depth, xlimits[1]-abl_depth]
+    ylimits_trunc = [ylimits[0]+abl_depth, ylimits[1]]
 
     from clawpack.visclaw import colormaps
 
@@ -113,22 +116,70 @@ def setplot(plotdata):
     plotitem.MappedGrid = True
     plotitem.mapc2p = mapping.mapc2p
 
+    # Figure for truncated waves
+    plotfigure = plotdata.new_plotfigure(name='waves (truncated)', figno=2)
+    plotfigure.kwargs = {'figsize':(10,8)}
+
+    # Set up axes for trace(sigma):
+    plotaxes = plotfigure.new_plotaxes()
+    plotaxes.axescmd = 'subplot(211)'
+    plotaxes.xlimits = xlimits_trunc
+    plotaxes.ylimits = ylimits_trunc
+    plotaxes.title = '-trace(sigma)'
+    plotaxes.scaled = True
+    plotaxes.afteraxes = plot_fault
+
+    # Set up for item on these axes:
+    plotitem = plotaxes.new_plotitem(plot_type='2d_pcolor')
+    plotitem.plot_var = sigmatr
+    plotitem.pcolor_cmap = colormaps.blue_white_red
+    plotitem.pcolor_cmin = -1e6
+    plotitem.pcolor_cmax = 1e6
+    plotitem.add_colorbar = False
+    plotitem.amr_celledges_show = [0]
+    plotitem.amr_patchedges_show = [0]
+    plotitem.MappedGrid = True
+    plotitem.mapc2p = mapping.mapc2p
+
+    # Set up axes for slip_direction_velocity:
+    plotaxes = plotfigure.new_plotaxes()
+    plotaxes.axescmd = 'subplot(212)'
+    plotaxes.xlimits = xlimits_trunc
+    plotaxes.ylimits = ylimits_trunc
+    plotaxes.title = 'slip-direction-velocity'
+    plotaxes.scaled = True
+    plotaxes.afteraxes = plot_fault
+
+    # Set up for item on these axes:
+    plotitem = plotaxes.new_plotitem(plot_type='2d_pcolor')
+    plotitem.plot_var = slip_direction_vel
+    plotitem.pcolor_cmap = colormaps.blue_white_red
+    plotitem.pcolor_cmin = -0.1
+    plotitem.pcolor_cmax = 0.1
+    plotitem.add_colorbar = False
+    plotitem.amr_celledges_show = [0]
+    plotitem.amr_patchedges_show = [0]
+    plotitem.MappedGrid = True
+    plotitem.mapc2p = mapping.mapc2p
+
     # Figure for grid cells
-    plotfigure = plotdata.new_plotfigure(name='cells', figno=2)
+    plotfigure = plotdata.new_plotfigure(name='cells', figno=3)
 
     # Set up for axes in this figure:
     plotaxes = plotfigure.new_plotaxes()
     plotaxes.xlimits = xlimits
     plotaxes.ylimits = ylimits
-    plotaxes.title = 'Level 6 grid patches'
+    plotaxes.title = 'Level 3 grid patches'
     plotaxes.scaled = True
+    plotaxes.afteraxes = plot_fault
+
 
     # Set up for item on these axes:
     plotitem = plotaxes.new_plotitem(plot_type='2d_patch')
     plotitem.amr_patch_bgcolor = ['#ffeeee', '#effeee', '#eeffee', '#eeeffe',
                                   '#eeeeff', '#ffffff']
     plotitem.amr_celledges_show = [0]
-    plotitem.amr_patchedges_show = [0,0,0,0,0,1]
+    plotitem.amr_patchedges_show = [0,0,1]
     plotitem.MappedGrid = True
     plotitem.mapc2p = mapping.mapc2p
 

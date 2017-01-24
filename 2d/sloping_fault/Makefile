@@ -59,8 +59,8 @@ SOURCES = \
   setaux.f90 \
   mapc2p.f90 \
   b4step2.f90 \
-  $(CLAW)/seismic/src/rp/rpn2_vc_elasticity_mapped_fault.f90 \
-  $(CLAW)/seismic/src/rp/rpt2_vc_elasticity_mapped_fault.f90 \
+  $(CLAW)/seismic/src/rp/rpn2_vc_elasticity_mapped_fault_abl.f90 \
+  $(CLAW)/seismic/src/rp/rpt2_vc_elasticity_mapped_fault_abl.f90
 
 #-------------------------------------------------------------------
 # Include Makefile containing standard definitions and make options:

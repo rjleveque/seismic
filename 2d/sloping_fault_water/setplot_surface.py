@@ -8,34 +8,12 @@ function setplot is called to set the plot parameters.
 """
 
 import numpy as np
-from mapc2p import mapc2p
-from plot_okada import plot_okada_surface
 from clawpack.clawutil.data import ClawData
-
-
-cscale = 8 # scale color limits
-
-probdata = ClawData()
-probdata.read('setprob.data',force=True)
-
-width = probdata.fault_width
-theta = probdata.fault_dip
-xcenter = probdata.fault_center
-ycenter = -probdata.fault_depth
-
-xp1 = xcenter - 0.5*width*np.cos(theta)
-xp2 = xcenter + 0.5*width*np.cos(theta)
-yp1 = ycenter + 0.5*width*np.sin(theta)
-yp2 = ycenter - 0.5*width*np.sin(theta)
-
-xlimits = [xcenter-0.5*probdata.domain_width,xcenter+0.5*probdata.domain_width]
-ylimits = [-probdata.domain_depth,probdata.water_depth]
-
-gdata = np.loadtxt('gauges.data',skiprows=7)
-ngauges = gdata.shape[0]
-print "Found %s gauges" % ngauges
-xc = gdata[:,1]
-yc = gdata[:,2]
+from mapping import Mapping
+from clawpack.clawutil.data import ClawData
+import clawpack.seismic.dtopotools_horiz_okada_and_1d as dtopotools
+from clawpack.geoclaw.data import LAT2METER
+reload(dtopotools)
 
 #--------------------------
 def setplot(plotdata):
@@ -48,56 +26,77 @@ def setplot(plotdata):
 
     """
 
+    fault = dtopotools.Fault()
+    fault.read(plotdata.outdir + '/fault.data')
+    probdata = ClawData()
+    probdata.read('setprob.data',force=True)
+
+    mapping = Mapping(fault,probdata.water_scaling)
+    fault_width = mapping.fault_width
+    xcenter = mapping.xcenter
+    ycenter = mapping.ycenter
+    xp1 = mapping.xp1
+    xp2 = mapping.xp2
+    yp1 = mapping.yp1
+    yp2 = mapping.yp2
+
+    xlimits = [xcenter-0.5*probdata.domain_width,xcenter+0.5*probdata.domain_width]
+    ylimits = [-probdata.domain_depth,0.0]
+    xlimitsW = [xp1-10.0*probdata.water_depth,xp2+10.0*probdata.water_depth]
+    ylimitsW = [-5.0*probdata.water_depth,probdata.water_depth]
+    abl_depth = probdata.abl_depth
+    xlimits_trunc = [xlimits[0]+abl_depth,xlimits[1]-abl_depth]
+    ylimits_trunc = [ylimits[0]+abl_depth,ylimits[1]]
+
+
 
     from clawpack.visclaw import colormaps
 
     plotdata.clearfigures()  # clear any old figures,axes,items data
     plotdata.format = 'binary'
+    plotdata.parallel = True
 
-    def afterframe(current_data):
-        from pylab import figure,subplot,plot,linspace,title,zeros,ylim,legend
-        from clawpack.visclaw.data import ClawPlotData
-        ngauges = 100
+    gaugedata = ClawData()
+    gaugedata.read('gauges.data',force=True)
+    ngauges = gaugedata.ngauges/2
+    xc = np.zeros(ngauges)
+    for j in range(ngauges):
+        g = plotdata.getgauge(j)
+        xc[j] = g.location[0]
+    fault.create_dtopography(xc/LAT2METER,np.array([0.]),[1.0],y_disp=True)
+
+    def plot_vertical_displacement(current_data):
+        from pylab import plot,zeros,gca, legend
         t = current_data.t
 
-        goffset = 0
-        xg = zeros(ngauges)
-        yg = zeros(ngauges)
-        for j in range(ngauges):
-            gaugeno = goffset + j
+        yf = zeros(ngauges)
+        for gaugeno in range(ngauges):
             g = plotdata.getgauge(gaugeno)
             for k in range(1,len(g.t)):
                 if g.t[k] > t:
                     break
                 dt = g.t[k] - g.t[k-1]
-                u = g.q[3,k]
-                v = g.q[4,k]
-                xg[j] = xg[j] + dt*u
-                yg[j] = yg[j] + dt*v
-        xw = zeros(ngauges)
-        yw = zeros(ngauges)
-        for j in range(ngauges):
-            gaugeno = ngauges + j
-            g = plotdata.getgauge(gaugeno)
-            for k in range(1,len(g.t)):
-                if g.t[k] > t:
-                    break
-                dt = g.t[k] - g.t[k-1]
-                u = g.q[3,k]
-                v = g.q[4,k]
-                xw[j] = xw[j] + dt*u
-                yw[j] = yw[j] + dt*v
+                v = 0.5*(g.q[4,k]+g.q[4,k-1])
+                yf[gaugeno] += dt*v
 
-        figure(10)
-        ax = subplot(211)
-        plot(xc[:ngauges],yg,'k',label="ground")
-	plot(xc[:ngauges],yw,'b',label="water")
-        title("surface displacements")
-        ylim(-0.5,0.5)
-        plot_okada_surface(ax, 'r--')
+        ys = zeros(ngauges)
+        for gaugeno in range(ngauges):
+            g = plotdata.getgauge(ngauges+gaugeno)
+            for k in range(1,len(g.t)):
+                if g.t[k] > t:
+                    break
+                dt = g.t[k] - g.t[k-1]
+                v = 0.5*(g.q[4,k]+g.q[4,k-1])
+                ys[gaugeno] += dt*v
+
+        ax = gca()
+        kwargs ={'linestyle':'-','color':'black','label':'sea floor'}
+        plot(xc[:ngauges],yf,**kwargs)
+        kwargs ={'linestyle':'-','color':'blue','label':'sea surface'}
+        plot(xc[:ngauges],ys,**kwargs)
+        kwargs = {'linestyle':'--','color':'r','label':'Okada'}
+        fault.plot_okada(ax,displacement='vertical',kwargs=kwargs)
         legend()
-
-    plotdata.afterframe = afterframe
 
     def plot_interfaces(current_data):
         from pylab import linspace, plot
@@ -112,72 +111,22 @@ def setplot(plotdata):
         q = current_data.q
         return -(q[0,:,:] + q[1,:,:])
 
-    def div(current_data):
-        from numpy import array,zeros,hstack,vstack
-        q = current_data.q
-        u = q[3,:,:]
-        v = q[4,:,:]
-        mx, my = u.shape
-        if (mx<3) or (my<3):
-            d = zeros(u.shape)
-            return d
-        dx, dy = current_data.dx, current_data.dy
-        I = array(range(1,mx-1))
-        J = array(range(1,my-1))
-        ux = (u[I+1,:][:,J] - u[I-1,:][:,J]) / (2*dx)
-        vy = (v[:,J+1][I,:] - v[:,J-1][I,:]) / (2*dy)
-        dint = ux + vy
-
-        #zx = zeros((mx-2,1))
-        #zy = zeros((1,my))
-        #d = vstack((zy, hstack((zx, ux+vy, zx)), zy))
-
-        d0 = dint[:,0]
-        d1 = dint[:,-1]
-        d2 = vstack((d0, dint.T, d1)).T
-        d0 = d2[0,:]
-        d1 = d2[-1,:]
-        d = vstack((d0,d2,d1))
-        return d
-
-    def curl(current_data):
-        from numpy import array,zeros,hstack,vstack
-        q = current_data.q
-        u = q[3,:,:]
-        v = q[4,:,:]
-        mx, my = u.shape
-        if (mx<3) or (my<3):
-            c = zeros(u.shape)
-            return c
-        dx, dy = current_data.dx, current_data.dy
-        I = array(range(1,mx-1))
-        J = array(range(1,my-1))
-        vx = (v[I+1,:][:,J] - v[I-1,:][:,J]) / (2*dx)
-        uy = (u[:,J+1][I,:] - u[:,J-1][I,:]) / (2*dy)
-        cint = vx - uy
-
-        c0 = cint[:,0]
-        c1 = cint[:,-1]
-        c2 = vstack((c0, cint.T, c1)).T
-        c0 = c2[0,:]
-        c1 = c2[-1,:]
-        c = vstack((c0,c2,c1))
-
-        # to set curl to zero near patch edges...
-        #c = zeros(u.shape)
-        #c[1:-1,1:-1] = vx - uy
-
-        return c
-
-    # Figure for trace(sigma)
-    plotfigure = plotdata.new_plotfigure(name='trace', figno=10)
+    # Figure for surface and p waves
+    plotfigure = plotdata.new_plotfigure(name='surface_and_p_waves', figno=1)
     plotfigure.kwargs = {'figsize':(8,8)}
 
-    # Set up for axes in this figure:
+    # Set axes for vertical displacement:
+    plotaxes = plotfigure.new_plotaxes()
+    plotaxes.axescmd = 'subplot(211)'
+    plotaxes.xlimits = xlimits
+    plotaxes.ylimits = [-0.3,0.5]
+    plotaxes.title = 'vertical displacement'
+    plotaxes.scaled = False
+    plotaxes.afteraxes = plot_vertical_displacement
+
+    # Set axes for vertical displacement:
     plotaxes = plotfigure.new_plotaxes()
     plotaxes.axescmd = 'subplot(212)'
-    #plotaxes.xlimits = [-75e3, 125e3]
-    #plotaxes.ylimits = [-50e3,0]
     plotaxes.xlimits = xlimits
     plotaxes.ylimits = ylimits
     plotaxes.title = '-trace(sigma)'
@@ -188,152 +137,65 @@ def setplot(plotdata):
     plotitem = plotaxes.new_plotitem(plot_type='2d_pcolor')
     plotitem.plot_var = sigmatr
     plotitem.pcolor_cmap = colormaps.blue_white_red
-    plotitem.pcolor_cmin = -2e6
-    plotitem.pcolor_cmax = 2e6
+    plotitem.pcolor_cmin = -1e6
+    plotitem.pcolor_cmax = 1e6
     plotitem.add_colorbar = False
-    plotitem.amr_celledges_show = [0,0]
+    plotitem.amr_celledges_show = [0]
     plotitem.amr_patchedges_show = [0]
     plotitem.MappedGrid = True
-    plotitem.mapc2p = mapc2p
+    plotitem.mapc2p = mapping.mapc2p
 
+    # Figure for surface and p waves (water scale)
+    plotfigure = plotdata.new_plotfigure(name='surface_and_p_waves (water scale)', figno=2)
+    plotfigure.kwargs = {'figsize':(8,8)}
 
-
-
-    # Figure for trace(sigma) and sigma_12 side by side
-    plotfigure = plotdata.new_plotfigure(name='P and S waves', figno=11)
-    plotfigure.show = False
-    plotfigure.kwargs = {'figsize':(12,12)}
-
-    # Set up for axes in this figure:
+    # Set axes for vertical displacement:
     plotaxes = plotfigure.new_plotaxes()
-    plotaxes.axescmd = 'subplot(511)'
-    plotaxes.xlimits = 'auto'
-    plotaxes.ylimits = 'auto'
+    plotaxes.axescmd = 'subplot(211)'
+    plotaxes.xlimits = xlimitsW
+    plotaxes.ylimits = [-0.3,0.5]
+    plotaxes.title = 'vertical displacement'
+    plotaxes.scaled = False
+    plotaxes.afteraxes = plot_vertical_displacement
+
+    # Set axes for vertical displacement:
+    plotaxes = plotfigure.new_plotaxes()
+    plotaxes.axescmd = 'subplot(212)'
+    plotaxes.xlimits = xlimitsW
+    plotaxes.ylimits = ylimitsW
     plotaxes.title = '-trace(sigma)'
     plotaxes.scaled = True
-    #plotaxes.afteraxes = plot_interfaces
+    plotaxes.afteraxes = plot_interfaces
 
     # Set up for item on these axes:
     plotitem = plotaxes.new_plotitem(plot_type='2d_pcolor')
     plotitem.plot_var = sigmatr
     plotitem.pcolor_cmap = colormaps.blue_white_red
-    plotitem.pcolor_cmin = -0.03 * cscale
-    plotitem.pcolor_cmax = 0.03 * cscale
+    plotitem.pcolor_cmin = -1e6
+    plotitem.pcolor_cmax = 1e6
     plotitem.add_colorbar = False
-    plotitem.amr_celledges_show = [1,0]
+    plotitem.amr_celledges_show = [0]
     plotitem.amr_patchedges_show = [0]
     plotitem.MappedGrid = True
-    plotitem.mapc2p = mapc2p
-
-
-    plotaxes = plotfigure.new_plotaxes()
-    plotaxes.axescmd = 'subplot(512)'
-    plotaxes.xlimits = 'auto'
-    plotaxes.ylimits = 'auto'
-    plotaxes.title = 'div(u)'
-    plotaxes.scaled = True
-    #plotaxes.afteraxes = plot_interfaces
-
-    # Set up for item on these axes:
-    plotitem = plotaxes.new_plotitem(plot_type='2d_pcolor')
-    plotitem.plot_var = div
-    plotitem.pcolor_cmap = colormaps.blue_white_red
-    plotitem.pcolor_cmin = -0.1 * cscale
-    plotitem.pcolor_cmax = 0.1 * cscale
-    plotitem.add_colorbar = False
-    plotitem.amr_celledges_show = [False]
-    plotitem.amr_patchedges_show = [0]
-    plotitem.MappedGrid = True
-    plotitem.mapc2p = mapc2p
-
-
-    # Figure for curl:
-    plotaxes = plotfigure.new_plotaxes()
-    plotaxes.axescmd = 'subplot(513)'
-    plotaxes.xlimits = 'auto'
-    plotaxes.ylimits = 'auto'
-    plotaxes.title = 'curl(u)'
-    plotaxes.scaled = True
-    #plotaxes.afteraxes = plot_interfaces
-
-    # Set up for item on these axes:
-    plotitem = plotaxes.new_plotitem(plot_type='2d_pcolor')
-    plotitem.plot_var = curl
-    plotitem.pcolor_cmap = colormaps.blue_white_red
-    plotitem.pcolor_cmin = -0.2 * cscale
-    plotitem.pcolor_cmax = 0.2 * cscale
-    plotitem.add_colorbar = False
-    plotitem.colorbar_shrink = 0.7
-    plotitem.amr_celledges_show = [False]
-    plotitem.amr_patchedges_show = [0]
-    plotitem.MappedGrid = True
-    plotitem.mapc2p = mapc2p
-
-
-    # Figure for x-velocity:
-    plotaxes = plotfigure.new_plotaxes()
-    plotaxes.axescmd = 'subplot(514)'
-    plotaxes.xlimits = 'auto'
-    plotaxes.ylimits = 'auto'
-    plotaxes.title = 'x-velocity'
-    plotaxes.scaled = True
-    #plotaxes.afteraxes = plot_interfaces
-
-    # Set up for item on these axes:
-    plotitem = plotaxes.new_plotitem(plot_type='2d_pcolor')
-    plotitem.plot_var = 3
-    plotitem.pcolor_cmap = colormaps.blue_white_red
-    plotitem.pcolor_cmin = -0.005 * cscale
-    plotitem.pcolor_cmax = 0.005 * cscale
-    plotitem.add_colorbar = False
-    plotitem.colorbar_shrink = 0.7
-    plotitem.amr_celledges_show = [False]
-    plotitem.amr_patchedges_show = [0]
-    plotitem.MappedGrid = True
-    plotitem.mapc2p = mapc2p
-
-
-    # Figure for y-velocity:
-    plotaxes = plotfigure.new_plotaxes()
-    plotaxes.axescmd = 'subplot(515)'
-    plotaxes.xlimits = 'auto'
-    plotaxes.ylimits = 'auto'
-    plotaxes.title = 'y-velocity'
-    plotaxes.scaled = True
-    #plotaxes.afteraxes = plot_interfaces
-
-    # Set up for item on these axes:
-    plotitem = plotaxes.new_plotitem(plot_type='2d_pcolor')
-    plotitem.plot_var = 4
-    plotitem.pcolor_cmap = colormaps.blue_white_red
-    plotitem.pcolor_cmin = -0.005 * cscale
-    plotitem.pcolor_cmax = 0.005 * cscale
-    plotitem.add_colorbar = False
-    plotitem.colorbar_shrink = 0.7
-    plotitem.amr_celledges_show = [False]
-    plotitem.amr_patchedges_show = [0]
-    plotitem.MappedGrid = True
-    plotitem.mapc2p = mapc2p
-
-
+    plotitem.mapc2p = mapping.mapc2p
 
     # Figure for grid cells
-    plotfigure = plotdata.new_plotfigure(name='cells', figno=2)
+    plotfigure = plotdata.new_plotfigure(name='cells', figno=3)
 
     # Set up for axes in this figure:
     plotaxes = plotfigure.new_plotaxes()
     plotaxes.xlimits = xlimits
     plotaxes.ylimits = ylimits
-    plotaxes.title = 'Level 4 grid patches'
+    plotaxes.title = 'Level 3 grid patches'
     plotaxes.scaled = True
 
     # Set up for item on these axes:
     plotitem = plotaxes.new_plotitem(plot_type='2d_patch')
     plotitem.amr_patch_bgcolor = ['#ffeeee', '#eeeeff', '#eeffee', '#ffffff']
     plotitem.amr_celledges_show = [0]
-    plotitem.amr_patchedges_show = [0,0,0,1]
+    plotitem.amr_patchedges_show = [0,0,1]
     plotitem.MappedGrid = True
-    plotitem.mapc2p = mapc2p
+    plotitem.mapc2p = mapping.mapc2p
 
 
     #-----------------------------------------
