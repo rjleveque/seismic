@@ -39,7 +39,7 @@ def setrun(claw_pkg='amrclaw'):
     # Problem-specific parameters to be written to setprob.data:
     #------------------------------------------------------------------
     probdata = rundata.new_UserData(name='probdata',fname='setprob.data')
-    probdata.add_param('abl_depth', 50e3, 'depth of absorbing layer')
+    probdata.add_param('abl_depth', 10e3, 'depth of absorbing layer')
     probdata.add_param('domain_depth', 50e3, 'depth of domain')
     probdata.add_param('domain_width', 300e3, 'width of domain')
 
@@ -149,8 +149,8 @@ def setrun(claw_pkg='amrclaw'):
     if clawdata.output_style==1:
         # Output ntimes frames at equally spaced times up to tfinal:
         # Can specify num_output_times = 0 for no output
-        clawdata.num_output_times = 50
-        clawdata.tfinal = 100.0
+        clawdata.num_output_times = 100
+        clawdata.tfinal = 200.0
         clawdata.output_t0 = True  # output at initial (or restart) time?
 
     elif clawdata.output_style == 2:
@@ -180,7 +180,7 @@ def setrun(claw_pkg='amrclaw'):
     # The current t, dt, and cfl will be printed every time step
     # at AMR levels <= verbosity.  Set verbosity = 0 for no printing.
     #   (E.g. verbosity == 2 means print only on levels 1 and 2.)
-    clawdata.verbosity = 0
+    clawdata.verbosity = 1
 
 
 
@@ -285,7 +285,7 @@ def setrun(claw_pkg='amrclaw'):
     # Specify when checkpoint files should be created that can be
     # used to restart a computation.
 
-    clawdata.checkpt_style = 2
+    clawdata.checkpt_style = 0
 
     if clawdata.checkpt_style == 0:
       # Do not checkpoint at all
@@ -297,7 +297,7 @@ def setrun(claw_pkg='amrclaw'):
 
     elif clawdata.checkpt_style == 2:
       # Specify a list of checkpoint times.
-      clawdata.checkpt_times = [rupture_rise_time]
+      clawdata.checkpt_times = []
 
     elif clawdata.checkpt_style == 3:
       # Checkpoint every checkpt_interval timesteps (on Level 1)

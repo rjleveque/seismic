@@ -3,7 +3,8 @@ subroutine b4step2(mbc,mx,my,meqn,q,xlower,ylower,dx,dy,t,dt,maux,aux)
 
 !   set slip before call to step2
 
-    use fault_module, only: center, xcb, nsubfaults, subfaults, final_rupture_rise_time, LAT2METER
+    use fault_module, only: center, xcb, nsubfaults, subfaults
+    use fault_module, only: nevents, event_times, LAT2METER
 
     implicit none
     integer, intent(in) :: mbc,mx,my,meqn,maux
@@ -11,11 +12,11 @@ subroutine b4step2(mbc,mx,my,meqn,q,xlower,ylower,dx,dy,t,dt,maux,aux)
     real(kind=8), intent(inout) :: q(meqn,1-mbc:mx+mbc,1-mbc:my+mbc)
     real(kind=8), intent(inout) :: aux(maux,1-mbc:mx+mbc,1-mbc:my+mbc)
 
-    integer :: i, j, k 
+    integer :: i, j, k
     real(kind=8) :: xcell, ycell
 
     aux(13,:,:) = 0.d0
-    if (t <= final_rupture_rise_time) then
+    if (t <= event_times(nevents)) then
 
       do j=1-mbc,my+mbc
         ycell = ylower + (j-0.5d0)*dy
@@ -37,7 +38,7 @@ subroutine b4step2(mbc,mx,my,meqn,q,xlower,ylower,dx,dy,t,dt,maux,aux)
 
             end if
           end do
- 
+
         end if
       end do
 

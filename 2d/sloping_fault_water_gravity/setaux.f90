@@ -4,21 +4,20 @@ subroutine setaux(mbc,mx,my,xlower,ylower,dx,dy,maux,aux)
     integer, intent(in) :: mbc,mx,my,maux
     real(kind=8), intent(in) :: xlower,ylower,dx,dy
     real(kind=8), intent(out) ::  aux(maux,1-mbc:mx+mbc,1-mbc:my+mbc)
+    real(kind=8) :: xcell, ycell, cp, cs
+    real(kind=8) :: rho_cell, lambda_cell, mu_cell
+    integer :: i,j
 
-    real (kind=8) :: center(2), theta, xcb(2), mindepth
-    common /fault/  center, theta, xcb, mindepth
+    ! Arrays to temporarily store computational and physical corners of grid cells
+    real(kind=8) :: xccorn(4),yccorn(4),xpcorn(4),ypcorn(4)
+    real(kind=8) :: norm, xn, yn, areap, pi2
+
+    real(kind=8) :: ABLdepth, ABLxpos(2), ABLypos
+    common /ablparam/ ABLdepth, ABLxpos, ABLypos
 
     real(kind=8) :: lambda_plate, mu_plate, rho_plate, lambda_water, mu_water, rho_water, g
     common /material/ lambda_plate, mu_plate, rho_plate, lambda_water, mu_water, rho_water, g
 
-    real(kind=8) :: xcell, ycell, cp, cs
-    integer :: i,j
-
-    real(kind=8) :: rho_cell, lambda_cell, mu_cell
-
-    ! Arrays to temporarily store computational and physical corners of grid cells
-    real(kind=8) :: xccorn(4),yccorn(4),xpcorn(4),ypcorn(4)
-    real(kind=8) :: norm, xn, yn, areap, b2c
 
 
 
@@ -42,6 +41,7 @@ subroutine setaux(mbc,mx,my,xlower,ylower,dx,dy,maux,aux)
 !
 ! c     #   aux(13,i,j) = slip:
     !
+    pi2 = 2.d0*datan(1.d0)
 
     ! Loop over all cells
       do j=1-mbc,my + mbc
@@ -121,15 +121,28 @@ subroutine setaux(mbc,mx,my,xlower,ylower,dx,dy,maux,aux)
           areap = 0.5*dabs(areap)
           aux(12,i,j) = areap/(dx*dy)
 
-          ! set slip:
-          xccorn(1) = xlower + float(i-1)*dx
-          yccorn(1) = ylower + float(j-1)*dy
-          if ((abs(yccorn(1)-center(2)) < 0.5d0*dy) .and. &
-              (xccorn(1) >= xcb(1)) .and. (xccorn(1) <= xcb(2))) then
-                aux(13,i,j) = exp(-((xccorn(1)-center(1))/(center(1)-xcb(1)))**2)
+          ! Initialize slip to zero
+          aux(13,i,j) = 0.d0
+
+          ! set absorbing layer factor in x direction
+          if (ABLdepth > 1.d-10) then
+            if (xcell .le. ABLxpos(1)) then
+              aux(14,i,j) = 1.d0/(1.d0 + dtan(pi2*(ABLxpos(1) - xcell)/ABLdepth)**2)
+            elseif (xcell .ge. ABLxpos(2)) then
+              aux(14,i,j) = 1.d0/(1.d0 + dtan(pi2*(xcell - ABLxpos(2))/ABLdepth)**2)
             else
-                aux(13,i,j) = 0.d0
-            endif
+              aux(14,i,j) = 1.d0
+            end if
+          end if
+
+          ! set absorbing layer factor in y direction
+          if (ABLdepth > 1.d-10) then
+            if (ycell .le. ABLypos) then
+              aux(15,i,j) = 1.d0/(1.d0 + dtan(pi2*(ABLypos - ycell)/ABLdepth)**2)
+            else
+              aux(15,i,j) = 1.d0
+            end if
+          end if
 
         end do
       end do

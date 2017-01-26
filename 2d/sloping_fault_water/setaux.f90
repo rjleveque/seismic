@@ -5,11 +5,9 @@ subroutine setaux(mbc,mx,my,xlower,ylower,dx,dy,maux,aux)
     real(kind=8), intent(in) :: xlower,ylower,dx,dy
     real(kind=8), intent(out) ::  aux(maux,1-mbc:mx+mbc,1-mbc:my+mbc)
     real(kind=8) :: xcell, ycell, cp, cs
+    real(kind=8) :: rho_cell, lambda_cell, mu_cell
     integer :: i,j
 
-    real(kind=8) :: rho_plate, lambda_plate, mu_plate
-    real(kind=8) :: rho_water, lambda_water, mu_water
-    real(kind=8) :: rho_cell, lambda_cell, mu_cell
 
     ! Arrays to temporarily store computational and physical corners of grid cells
     real(kind=8) :: xccorn(4),yccorn(4),xpcorn(4),ypcorn(4)
@@ -17,6 +15,10 @@ subroutine setaux(mbc,mx,my,xlower,ylower,dx,dy,maux,aux)
 
     real(kind=8) :: ABLdepth, ABLxpos(2), ABLypos
     common /ablparam/ ABLdepth, ABLxpos, ABLypos
+
+    real(kind=8) :: lambda_plate, mu_plate, rho_plate, lambda_water, mu_water, rho_water
+    common /material/ lambda_plate, mu_plate, rho_plate, lambda_water, mu_water, rho_water
+
 
 ! c     #   (lambda = nu*E/((1+nu)(1-2nu))), E=young modulus, nu=poisson ration
 ! c     #   aux(1,i,j) is the density of the elastic material
@@ -38,14 +40,6 @@ subroutine setaux(mbc,mx,my,xlower,ylower,dx,dy,maux,aux)
 !
 ! c     #   aux(13,i,j) = slip:
     !
-
-    lambda_plate = 60.d9  ! Pa
-    mu_plate = 30.d9      ! Pa
-    rho_plate = 2500.d0   ! kg/m**3
-
-    lambda_water = 2.202256d9  ! Pa
-    mu_water = 0.d0      ! Pa
-    rho_water = 1000.d0   ! kg/m**3
 
     pi2 = 2.d0*datan(1.d0)
 

@@ -2,7 +2,8 @@
 # Makefile for Clawpack code in this directory.
 # This version only sets the local files and frequently changed
 # options, and then includes the standard makefile pointed to by CLAWMAKE.
-CLAWMAKE = $(CLAW)/clawutil/src/Makefile.common
+# Note Seismic version takes setfault.py into account
+CLAWMAKE = $(CLAW)/seismic/src/Makefile.common
 
 # See the above file for details and a list of make options, or type
 #   make .help
@@ -15,6 +16,7 @@ CLAWMAKE = $(CLAW)/clawutil/src/Makefile.common
 CLAW_PKG = amrclaw                  # Clawpack package to use
 EXE = xamr                          # Executable to create
 SETRUN_FILE = setrun.py             # File containing function to make data
+SETFAULT_FILE = setfault.py					# File containing function to make fault
 OUTDIR = _output                    # Directory for output
 SETPLOT_FILE = setplot_surface.py   # File containing function to set plots
 PLOTDIR = _plots                    # Directory for plots
@@ -58,7 +60,8 @@ SOURCES = \
   bc2amr.f \
   setaux.f90 \
   mapc2p.f90 \
-  b4step2.f90 \
+  $(SEISLIB)/b4step2.f90 \
+	$(SEISLIB)/tick.f \
   $(CLAW)/seismic/src/rp/rpn2_vc_elasticity_mapped_fault_abl.f90 \
   $(CLAW)/seismic/src/rp/rpt2_vc_elasticity_mapped_fault_abl.f90
 

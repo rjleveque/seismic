@@ -60,12 +60,10 @@ def setplot(plotdata):
         q = current_data.q
         return -(q[0,:,:] + q[1,:,:])
 
-    def slip_direction_vel(current_data):
+    def dip_direction_vel(current_data):
         # return vel dot tau, where tau is tangent to fault
         tau_x = (xp2 - xp1)/fault_width
         tau_y = (yp2 - yp1)/fault_width
-        tau_x = np.where(current_data.y > ycenter, -tau_x, tau_x)
-        tau_y = np.where(current_data.y > ycenter, -tau_y, tau_y)
         u = current_data.q[3,:,:]
         v = current_data.q[4,:,:]
         return u*tau_x + v*tau_y
@@ -89,7 +87,7 @@ def setplot(plotdata):
     plotitem.pcolor_cmap = colormaps.blue_white_red
     plotitem.pcolor_cmin = -1e6
     plotitem.pcolor_cmax = 1e6
-    plotitem.add_colorbar = False
+    plotitem.add_colorbar = True
     plotitem.amr_celledges_show = [0]
     plotitem.amr_patchedges_show = [0]
     plotitem.MappedGrid = True
@@ -100,17 +98,17 @@ def setplot(plotdata):
     plotaxes.axescmd = 'subplot(212)'
     plotaxes.xlimits = xlimits
     plotaxes.ylimits = ylimits
-    plotaxes.title = 'slip-direction-velocity'
+    plotaxes.title = 'dip-direction velocity'
     plotaxes.scaled = True
     plotaxes.afteraxes = plot_fault
 
     # Set up for item on these axes:
     plotitem = plotaxes.new_plotitem(plot_type='2d_pcolor')
-    plotitem.plot_var = slip_direction_vel
+    plotitem.plot_var = dip_direction_vel
     plotitem.pcolor_cmap = colormaps.blue_white_red
-    plotitem.pcolor_cmin = -0.1
-    plotitem.pcolor_cmax = 0.1
-    plotitem.add_colorbar = False
+    plotitem.pcolor_cmin = -0.01
+    plotitem.pcolor_cmax = 0.01
+    plotitem.add_colorbar = True
     plotitem.amr_celledges_show = [0]
     plotitem.amr_patchedges_show = [0]
     plotitem.MappedGrid = True
@@ -135,7 +133,7 @@ def setplot(plotdata):
     plotitem.pcolor_cmap = colormaps.blue_white_red
     plotitem.pcolor_cmin = -1e6
     plotitem.pcolor_cmax = 1e6
-    plotitem.add_colorbar = False
+    plotitem.add_colorbar = True
     plotitem.amr_celledges_show = [0]
     plotitem.amr_patchedges_show = [0]
     plotitem.MappedGrid = True
@@ -146,17 +144,17 @@ def setplot(plotdata):
     plotaxes.axescmd = 'subplot(212)'
     plotaxes.xlimits = xlimits_trunc
     plotaxes.ylimits = ylimits_trunc
-    plotaxes.title = 'slip-direction-velocity'
+    plotaxes.title = 'dip-direction velocity'
     plotaxes.scaled = True
     plotaxes.afteraxes = plot_fault
 
     # Set up for item on these axes:
     plotitem = plotaxes.new_plotitem(plot_type='2d_pcolor')
-    plotitem.plot_var = slip_direction_vel
+    plotitem.plot_var = dip_direction_vel
     plotitem.pcolor_cmap = colormaps.blue_white_red
     plotitem.pcolor_cmin = -0.1
     plotitem.pcolor_cmax = 0.1
-    plotitem.add_colorbar = False
+    plotitem.add_colorbar = True
     plotitem.amr_celledges_show = [0]
     plotitem.amr_patchedges_show = [0]
     plotitem.MappedGrid = True
