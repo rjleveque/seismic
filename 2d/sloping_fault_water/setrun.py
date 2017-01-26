@@ -287,7 +287,7 @@ def setrun(claw_pkg='amrclaw'):
 
     # sea floor:
     for gaugeno,x in enumerate(xgauges):
-        gauges.append([gaugeno,x,0.5*probdata.water_scaling*dy/8.0/8.0,0,1e10])
+        gauges.append([gaugeno,x,0.5*probdata.water_scaling*dy/8.0/4.0/2.0,0,1e10])
 
     # water_surface:
     for gaugeno,x in enumerate(xgauges):
@@ -327,13 +327,13 @@ def setrun(claw_pkg='amrclaw'):
     amrdata = rundata.amrdata
 
     # max number of refinement levels:
-    amrdata.amr_levels_max = 3
+    amrdata.amr_levels_max = 4
 
     # List of refinement ratios at each level (length at least
     # amr_level_max-1)
-    amrdata.refinement_ratios_x = [8,8] # NOTE: if you change this, you should
-    amrdata.refinement_ratios_y = [8,8] # change where the water gauges are
-    amrdata.refinement_ratios_t = [8,8]
+    amrdata.refinement_ratios_x = [8,4,2] # NOTE: if you change this, you should
+    amrdata.refinement_ratios_y = [8,4,2] # change where the water gauges are
+    amrdata.refinement_ratios_t = [8,4,2]
 
 
     # Specify type of each aux variable in amrdata.auxtype.
@@ -382,10 +382,17 @@ def setrun(claw_pkg='amrclaw'):
     #  [minlevel,maxlevel,t1,t2,x1,x2,y1,y2]
 
     ## Region for the fault
-    regions.append([amrdata.amr_levels_max,amrdata.amr_levels_max,
+    regions.append([amrdata.amr_levels_max-1,amrdata.amr_levels_max-1,
                     0,rupture_rise_time,
                     fault_center-0.5*fault_width,fault_center+0.5*fault_width,
                     -fault_depth-dx, -fault_depth+dx])
+
+    # Only allow highest-refined level in water
+    regions.append([1,amrdata.amr_levels_max-1,
+                    0,1e9,
+                    -1e9,1e9,
+                    -1e9,0.0])
+                 
 
 
     #  ----- For developers -----

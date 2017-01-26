@@ -176,7 +176,7 @@ def setplot(plotdata):
     plotaxes = plotfigure.new_plotaxes()
     plotaxes.xlimits = xlimits
     plotaxes.ylimits = ylimits
-    plotaxes.title = 'Level 3 grid patches'
+    plotaxes.title = 'Level 4 grid patches'
     plotaxes.scaled = True
     plotaxes.afteraxes = plot_interfaces
 
@@ -184,7 +184,7 @@ def setplot(plotdata):
     plotitem = plotaxes.new_plotitem(plot_type='2d_patch')
     plotitem.amr_patch_bgcolor = ['#ffeeee', '#eeeeff', '#eeffee', '#ffffff']
     plotitem.amr_celledges_show = [0]
-    plotitem.amr_patchedges_show = [0,0,1]
+    plotitem.amr_patchedges_show = [0,0,0,1]
     plotitem.MappedGrid = True
     plotitem.mapc2p = mapping.mapc2p
 
