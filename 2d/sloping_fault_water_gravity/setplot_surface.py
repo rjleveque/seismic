@@ -10,7 +10,6 @@ function setplot is called to set the plot parameters.
 import numpy as np
 from clawpack.clawutil.data import ClawData
 from mapping import Mapping
-from clawpack.clawutil.data import ClawData
 import clawpack.seismic.dtopotools_horiz_okada_and_1d as dtopotools
 from clawpack.geoclaw.data import LAT2METER
 reload(dtopotools)
@@ -73,21 +72,19 @@ def setplot(plotdata):
         for gaugeno in range(ngauges):
             g = plotdata.getgauge(gaugeno)
             for k in range(1,len(g.t)):
-                if g.t[k] > t:
-                    break
-                dt = g.t[k] - g.t[k-1]
-                v = 0.5*(g.q[4,k]+g.q[4,k-1])
-                yf[gaugeno] += dt*v
+                if (g.t[k] > t and g.t[k-1] <= t):
+                    dt = g.t[k] - g.t[k-1]
+                    yf[gaugeno] = g.q[5,k]*(t-g.t[k-1])/dt +\
+                                  g.q[5,k-1]*(g.t[k]-t)/dt
 
         ys = zeros(ngauges)
         for gaugeno in range(ngauges):
             g = plotdata.getgauge(ngauges+gaugeno)
             for k in range(1,len(g.t)):
-                if g.t[k] > t:
-                    break
-                dt = g.t[k] - g.t[k-1]
-                v = 0.5*(g.q[4,k]+g.q[4,k-1])
-                ys[gaugeno] += dt*v
+                if (g.t[k] > t and g.t[k-1] <= t):
+                    dt = g.t[k] - g.t[k-1]
+                    ys[gaugeno] = g.q[5,k]*(t-g.t[k-1])/dt +\
+                                  g.q[5,k-1]*(g.t[k]-t)/dt
 
         ax = gca()
         kwargs ={'linestyle':'-','color':'black','label':'sea floor'}
@@ -196,38 +193,6 @@ def setplot(plotdata):
     plotitem.amr_patchedges_show = [0,0,1]
     plotitem.MappedGrid = True
     plotitem.mapc2p = mapping.mapc2p
-
-
-    #-----------------------------------------
-    # Figures for gauges
-    #-----------------------------------------
-    plotfigure = plotdata.new_plotfigure(name='gauge plot', figno=300, \
-                    type='each_gauge')
-    #plotfigure.clf_each_gauge = False
-    plotfigure.show = False
-
-    # Set up for axes in this figure:
-    plotaxes = plotfigure.new_plotaxes()
-    plotaxes.axescmd = 'subplot(2,1,1)'
-    plotaxes.ylimits = 'auto'
-    plotaxes.title = 'Horizontal velocity'
-
-    # Plot surface as blue curve:
-    plotitem = plotaxes.new_plotitem(plot_type='1d_plot')
-    plotitem.plot_var = 3
-    plotitem.plotstyle = 'b-'
-
-    plotaxes = plotfigure.new_plotaxes()
-    plotaxes.axescmd = 'subplot(2,1,2)'
-    plotaxes.ylimits = 'auto'
-    plotaxes.title = 'Vertical velocity'
-
-    # Plot surface as blue curve:
-    plotitem = plotaxes.new_plotitem(plot_type='1d_plot')
-    plotitem.plot_var = 4
-    plotitem.plotstyle = 'b-'
-
-
 
     # Parameters used only when creating html and/or latex hardcopy
     # e.g., via clawpack.visclaw.frametools.printframes:

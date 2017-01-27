@@ -95,7 +95,7 @@ def setplot(plotdata):
     plotitem.pcolor_cmap = colormaps.blue_white_red
     plotitem.pcolor_cmin = -1e6
     plotitem.pcolor_cmax = 1e6
-    plotitem.add_colorbar = False
+    plotitem.add_colorbar = True
     plotitem.amr_celledges_show = [0]
     plotitem.amr_patchedges_show = [0]
     plotitem.MappedGrid = True
@@ -116,7 +116,7 @@ def setplot(plotdata):
     plotitem.pcolor_cmap = colormaps.blue_white_red
     plotitem.pcolor_cmin = -0.1
     plotitem.pcolor_cmax = 0.1
-    plotitem.add_colorbar = False
+    plotitem.add_colorbar = True
     plotitem.amr_celledges_show = [0]
     plotitem.amr_patchedges_show = [0]
     plotitem.MappedGrid = True
@@ -140,7 +140,7 @@ def setplot(plotdata):
     plotitem.pcolor_cmap = colormaps.blue_white_red
     plotitem.pcolor_cmin = -1e6
     plotitem.pcolor_cmax = 1e6
-    plotitem.add_colorbar = False
+    plotitem.add_colorbar = True
     plotitem.amr_celledges_show = [0]
     plotitem.amr_patchedges_show = [0]
     plotitem.MappedGrid = True
@@ -162,7 +162,7 @@ def setplot(plotdata):
     plotitem.pcolor_cmap = colormaps.blue_white_red
     plotitem.pcolor_cmin = -1e-1
     plotitem.pcolor_cmax = 1e-1
-    plotitem.add_colorbar = False
+    plotitem.add_colorbar = True
     plotitem.amr_celledges_show = [0]
     plotitem.amr_patchedges_show = [0]
     plotitem.MappedGrid = True

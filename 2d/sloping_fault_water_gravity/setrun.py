@@ -43,8 +43,8 @@ def setrun(claw_pkg='amrclaw'):
     probdata = rundata.new_UserData(name='probdata',fname='setprob.data')
     probdata.add_param('water_scaling', 0, 'ratio automatically set for mapping')
     probdata.add_param('abl_depth', 10e3, 'depth of absorbing layer')
-    probdata.add_param('domain_depth', 200e3, 'depth of domain')
-    probdata.add_param('domain_width', 400e3, 'width of domain')
+    probdata.add_param('domain_depth', 50e3, 'depth of domain')
+    probdata.add_param('domain_width', 300e3, 'width of domain')
     probdata.add_param('water_depth', 3e3, 'depth of water')
 
 
