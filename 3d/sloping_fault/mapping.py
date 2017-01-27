@@ -2,7 +2,7 @@ import numpy
 from pylab import *
 import clawpack.seismic.dtopotools_horiz_okada_and_1d as dtopotools
 reload(dtopotools)
-from clawpack.geoclaw.data import LAT2METER
+from clawpack.seismic.mappings import Mapping3D
 
 def test(mfault):
 
@@ -36,47 +36,11 @@ def test(mfault):
     plot((mapping.xp1,mapping.xp2),(mapping.yp1,mapping.yp2),'-g')
     axis('scaled')
 
-class Mapping(object):
+class Mapping(Mapping3D):
 
     def __init__(self, fault):
-
-        subfaultF = fault.subfaults[0]
-        subfaultL = fault.subfaults[-1]
-        theta = subfaultL.dip/180.0*numpy.pi
-
-        xp1 = subfaultF.longitude*LAT2METER
-        yp1 = subfaultF.latitude - 0.5*subfaultF.length
-        zp1 = -subfaultF.depth
- 
-        xp2 = subfaultL.longitude*LAT2METER + np.cos(theta)*subfaultL.width
-        yp2 = subfaultL.latitude + 0.5*subfaultL.length
-        zp2 = -subfaultL.depth - np.sin(theta)*subfaultL.width
-
-        xcenter = 0.5*(xp1 + xp2)
-        ycenter = 0.5*(yp1 + yp2)
-        zcenter = 0.5*(zp1 + zp2)
-        fault_width = np.sqrt((xp2-xp1)**2 + (zp2-zp1)**2)
-        fault_length = yp2 - yp1
-
-        xcl = xcenter - 0.5*fault_width
-        xcr = xcenter + 0.5*fault_width
-
-        self.fault_width = fault_width
-        self.fault_length = fault_length
-        self.fault_depth = -zcenter
-        self.xcenter = xcenter
-        self.ycenter = ycenter
-        self.zcenter = zcenter
-        self.theta = theta
-        self.xcl = xcl
-        self.xcr = xcr
-        self.xp1 = xp1
-        self.xp2 = xp2
-        self.zp1 = zp1
-        self.zp2 = zp2
-
-	self.slice_xval = None
-
+        super(Mapping,self).__init__(fault)
+	
     def set_slice_xval(self,current_xval):
         self.slice_xval = current_xval
 

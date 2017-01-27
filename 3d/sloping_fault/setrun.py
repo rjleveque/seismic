@@ -11,7 +11,7 @@ import numpy as np
 from clawpack.seismic.data import SliceData
 import clawpack.seismic.dtopotools_horiz_okada_and_1d as dtopotools
 reload(dtopotools)
-from mapping import Mapping
+from clawpack.seismic.mappings import Mapping3D
 
 #------------------------------
 def setrun(claw_pkg='amrclaw'):
@@ -58,7 +58,7 @@ def setrun(claw_pkg='amrclaw'):
     fault = dtopotools.Fault()
     fault.read('fault.data')
 
-    mapping = Mapping(fault)
+    mapping = Mapping3D(fault)
     fault_length = mapping.fault_length
     fault_width = mapping.fault_width
     fault_depth = mapping.fault_depth
@@ -319,7 +319,7 @@ def setrun(claw_pkg='amrclaw'):
     #    for y in ygauges:
     #        gauges.append([gcount, x, y, clawdata.upper[2]-1, 0.0, 1e9])
     #        gcount = gcount + 1
-    
+
     # ---------------
     # AMR parameters:
     # ---------------
@@ -376,7 +376,7 @@ def setrun(claw_pkg='amrclaw'):
     ycb = [fault_ycenter-0.5*fault_length,fault_ycenter+0.5*fault_length]
 
     # high-resolution region to surround the fault during slip
-    regions.append([amrdata.amr_levels_max,amrdata.amr_levels_max, 
+    regions.append([amrdata.amr_levels_max,amrdata.amr_levels_max,
                     0,1,
                     xcb[0],xcb[1],
                     ycb[0],ycb[1],
@@ -384,7 +384,7 @@ def setrun(claw_pkg='amrclaw'):
 
     # decreasing-resolution for cells further away from fault
     for j in range(amrdata.amr_levels_max-1):
-        regions.append([1,amrdata.amr_levels_max-j, 
+        regions.append([1,amrdata.amr_levels_max-j,
                     0,1e9,
                     -1e9,1e9,
                     -1e9,1e9,

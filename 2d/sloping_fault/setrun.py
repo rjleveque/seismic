@@ -10,7 +10,7 @@ import os
 import numpy as np
 import clawpack.seismic.dtopotools_horiz_okada_and_1d as dtopotools
 reload(dtopotools)
-from mapping import Mapping
+from clawpack.seismic.mappings import Mapping2D
 
 #------------------------------
 def setrun(claw_pkg='amrclaw'):
@@ -49,7 +49,7 @@ def setrun(claw_pkg='amrclaw'):
     fault = dtopotools.Fault()
     fault.read('fault.data')
 
-    mapping = Mapping(fault)
+    mapping = Mapping2D(fault)
     fault_width = mapping.fault_width
     fault_depth = mapping.fault_depth
     fault_center = mapping.xcenter
@@ -149,8 +149,8 @@ def setrun(claw_pkg='amrclaw'):
     if clawdata.output_style==1:
         # Output ntimes frames at equally spaced times up to tfinal:
         # Can specify num_output_times = 0 for no output
-        clawdata.num_output_times = 100
-        clawdata.tfinal = 200.0
+        clawdata.num_output_times = 50
+        clawdata.tfinal = 100.0
         clawdata.output_t0 = True  # output at initial (or restart) time?
 
     elif clawdata.output_style == 2:

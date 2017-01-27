@@ -31,6 +31,8 @@ contains
         allocate(event_times(2*nsubfaults))
 
         ! Read in subfaults
+        xp1 = 1.d10
+        xp2 = -1.d10
         do i=1,nsubfaults
           read(7,*) input_line
           theta = input_line(2)/180.0*4.d0*datan(1.d0)
@@ -43,6 +45,18 @@ contains
 
           event_times(2*i-1) = subfaults(i)%rupture_time
           event_times(2*i) = subfaults(i)%rupture_time + subfaults(i)%rise_time
+
+          swap = subfaults(i)%longitude*LAT2METER
+          if (swap < xp1) then
+            xp1 = swap
+            yp1 = -subfaults(i)%depth
+          end if
+
+          swap = subfaults(i)%longitude*LAT2METER + dcos(theta)*subfaults(i)%width
+          if (xp2 < swap) then
+            xp2 = swap
+            yp2 = -subfaults(i)%depth - dsin(theta)*subfaults(i)%width
+          end if
         end do
 
         ! Remove trivial event times
@@ -90,12 +104,6 @@ contains
         end do
 
         ! Compute spatial fault information
-        xp1 = subfaults(1)%longitude*LAT2METER
-        yp1 = -subfaults(1)%depth
-
-        xp2 = subfaults(nsubfaults)%longitude*LAT2METER + dcos(theta)*subfaults(nsubfaults)%width
-        yp2 = -subfaults(nsubfaults)%depth - dsin(theta)*subfaults(nsubfaults)%width
-
         center(1) = 0.5d0*(xp1 + xp2)
         center(2) = 0.5d0*(yp1 + yp2)
         total_width = dsqrt((xp2-xp1)**2 + (yp2-yp1)**2)

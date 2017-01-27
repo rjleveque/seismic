@@ -10,7 +10,7 @@ import os
 import numpy as np
 import clawpack.seismic.dtopotools_horiz_okada_and_1d as dtopotools
 reload(dtopotools)
-from mapping import Mapping
+from clawpack.seismic.mappings import Mapping2D
 
 #------------------------------
 def setrun(claw_pkg='amrclaw'):
@@ -53,7 +53,7 @@ def setrun(claw_pkg='amrclaw'):
     fault = dtopotools.Fault()
     fault.read('fault.data')
 
-    mapping = Mapping(fault)
+    mapping = Mapping2D(fault)
     fault_width = mapping.fault_width
     fault_depth = mapping.fault_depth
     fault_center = mapping.xcenter
@@ -392,7 +392,7 @@ def setrun(claw_pkg='amrclaw'):
                     0,1e9,
                     -1e9,1e9,
                     -1e9,0.0])
-                 
+
 
 
     #  ----- For developers -----

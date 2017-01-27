@@ -1,5 +1,5 @@
 import clawpack.seismic.dtopotools_horiz_okada_and_1d as dtopotools
-from numpy import arange,cos,sin,pi,append,linspace
+from numpy import arange,cos,sin,pi
 reload(dtopotools)
 from clawpack.geoclaw.data import LAT2METER
 
@@ -12,7 +12,7 @@ fault_top_center = [0.0,-20000.0]
 slip = 1.0
 mu = 3e10
 rupture_time = 0.0
-rise_time = 1.0
+rise_time = 10.0
 nsubfaults = 1
 
 longitude0 = fault_top_center[0]/LAT2METER

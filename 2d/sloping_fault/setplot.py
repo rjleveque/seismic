@@ -106,8 +106,8 @@ def setplot(plotdata):
     plotitem = plotaxes.new_plotitem(plot_type='2d_pcolor')
     plotitem.plot_var = dip_direction_vel
     plotitem.pcolor_cmap = colormaps.blue_white_red
-    plotitem.pcolor_cmin = -0.01
-    plotitem.pcolor_cmax = 0.01
+    plotitem.pcolor_cmin = -0.1
+    plotitem.pcolor_cmax = 0.1
     plotitem.add_colorbar = True
     plotitem.amr_celledges_show = [0]
     plotitem.amr_patchedges_show = [0]
