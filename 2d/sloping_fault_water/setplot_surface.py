@@ -197,38 +197,6 @@ def setplot(plotdata):
     plotitem.MappedGrid = True
     plotitem.mapc2p = mapping.mapc2p
 
-
-    #-----------------------------------------
-    # Figures for gauges
-    #-----------------------------------------
-    plotfigure = plotdata.new_plotfigure(name='gauge plot', figno=300, \
-                    type='each_gauge')
-    #plotfigure.clf_each_gauge = False
-    plotfigure.show = False
-
-    # Set up for axes in this figure:
-    plotaxes = plotfigure.new_plotaxes()
-    plotaxes.axescmd = 'subplot(2,1,1)'
-    plotaxes.ylimits = 'auto'
-    plotaxes.title = 'Horizontal velocity'
-
-    # Plot surface as blue curve:
-    plotitem = plotaxes.new_plotitem(plot_type='1d_plot')
-    plotitem.plot_var = 3
-    plotitem.plotstyle = 'b-'
-
-    plotaxes = plotfigure.new_plotaxes()
-    plotaxes.axescmd = 'subplot(2,1,2)'
-    plotaxes.ylimits = 'auto'
-    plotaxes.title = 'Vertical velocity'
-
-    # Plot surface as blue curve:
-    plotitem = plotaxes.new_plotitem(plot_type='1d_plot')
-    plotitem.plot_var = 4
-    plotitem.plotstyle = 'b-'
-
-
-
     # Parameters used only when creating html and/or latex hardcopy
     # e.g., via clawpack.visclaw.frametools.printframes:
 
