@@ -29,7 +29,7 @@ def setplot(plotdata):
     fault = dtopotools.Fault()
     fault.read(plotdata.outdir + '/fault.data')
     probdata = ClawData()
-    probdata.read('setprob.data',force=True)
+    probdata.read(plotdata.outdir + '/setprob.data',force=True)
 
     mapping = Mapping(fault,probdata.water_scaling)
     fault_width = mapping.fault_width
@@ -57,7 +57,7 @@ def setplot(plotdata):
     plotdata.parallel = True
 
     gaugedata = ClawData()
-    gaugedata.read('gauges.data',force=True)
+    gaugedata.read(plotdata.outdir + '/gauges.data',force=True)
     ngauges = gaugedata.ngauges/2
     xc = np.zeros(ngauges)
     for j in range(ngauges):

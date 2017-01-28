@@ -27,7 +27,7 @@ def setplot(plotdata):
     fault = dtopotools.Fault()
     fault.read(plotdata.outdir + '/fault.data')
     probdata = ClawData()
-    probdata.read('setprob.data',force=True)
+    probdata.read(plotdata.outdir + '/setprob.data',force=True)
 
     mapping = Mapping(fault, probdata.water_scaling)
     fault_width = mapping.fault_width

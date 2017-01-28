@@ -37,7 +37,7 @@ def setplot(plotdata):
     yp2 = mapping.yp2
 
     probdata = ClawData()
-    probdata.read('setprob.data',force=True)
+    probdata.read(plotdata.outdir + '/setprob.data',force=True)
     xlimits = [xcenter-0.5*probdata.domain_width,xcenter+0.5*probdata.domain_width]
     ylimits = [-probdata.domain_depth,0.0]
     abl_depth = probdata.abl_depth

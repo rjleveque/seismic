@@ -24,6 +24,10 @@ def setplot(plotdata):
     Output: a modified version of plotdata.
 
     """
+    
+    updip_gaugeno = 30
+    downdip_gaugeno = 305
+
     fault = dtopotools.Fault()
     fault.read(plotdata.outdir + '/fault.data')
 
@@ -37,7 +41,7 @@ def setplot(plotdata):
     yp2 = mapping.yp2
 
     probdata = ClawData()
-    probdata.read('setprob.data',force=True)
+    probdata.read(plotdata.outdir + '/setprob.data',force=True)
     xlimits = [xcenter-0.5*probdata.domain_width,xcenter+0.5*probdata.domain_width]
     ylimits = [-probdata.domain_depth,0.0]
     abl_depth = probdata.abl_depth
@@ -50,7 +54,7 @@ def setplot(plotdata):
     plotdata.format = 'binary'
 
     gaugedata = ClawData()
-    gaugedata.read('gauges.data',force=True)
+    gaugedata.read(plotdata.outdir + '/gauges.data',force=True)
     ngauges = gaugedata.ngauges
     xc = np.zeros(ngauges)
     for j in range(ngauges):
@@ -83,6 +87,41 @@ def setplot(plotdata):
         xl = linspace(xp1,xp2,100)
         yl = linspace(yp1,yp2,100)
         plot(xl,yl,'k')
+
+    def plot_gauge_vertical_displacement(t,gaugeno):
+        from pylab import plot,zeros
+ 
+        g = plotdata.getgauge(gaugeno)
+        ys = zeros(len(g.t))
+        for k in range(1,len(g.t)):
+            ys[k] = ys[k-1] + 0.5*(g.t[k]-g.t[k-1])*(g.q[4,k]+g.q[4,k-1])
+
+        plot(g.t,ys,'-b')
+        plot([t,t],[-1e9,1e9],'--k')
+
+    def plot_gauge_horizontal_displacement(t,gaugeno):
+        from pylab import plot,zeros
+ 
+        g = plotdata.getgauge(gaugeno)
+        xs = zeros(len(g.t))
+        for k in range(1,len(g.t)):
+            xs[k] = xs[k-1] + 0.5*(g.t[k]-g.t[k-1])*(g.q[3,k]+g.q[3,k-1])
+
+        plot(g.t,xs,'-b')
+        plot([t,t],[-1e9,1e9],'--k')
+
+
+    def plot_gauge_vertical_displacement_updip(current_data):
+        plot_gauge_vertical_displacement(current_data.t,updip_gaugeno)
+
+    def plot_gauge_vertical_displacement_downdip(current_data):
+        plot_gauge_vertical_displacement(current_data.t,downdip_gaugeno)
+
+    def plot_gauge_horizontal_displacement_updip(current_data):
+        plot_gauge_horizontal_displacement(current_data.t,updip_gaugeno)
+
+    def plot_gauge_horizontal_displacement_downdip(current_data):
+        plot_gauge_horizontal_displacement(current_data.t,downdip_gaugeno)
 
     def sigmatr(current_data):
         # return -trace(sigma)
@@ -132,7 +171,7 @@ def setplot(plotdata):
     plotaxes.axescmd = 'subplot(211)'
     plotaxes.xlimits = xlimits_trunc
     plotaxes.ylimits = [-0.3, 0.5]
-    plotaxes.title = 'vertical displacement'
+    plotaxes.title = 'vertical displacement at x='
     plotaxes.scaled = False
     plotaxes.afteraxes = plot_vertical_displacement
 
@@ -157,14 +196,88 @@ def setplot(plotdata):
     plotitem.MappedGrid = True
     plotitem.mapc2p = mapping.mapc2p
 
+    # Figure for up-dip ground motion
+    plotfigure = plotdata.new_plotfigure(name='up-dip ground motion', figno=3)
+    plotfigure.kwargs = {'figsize':(8,8)}
+
+    # Set axes for surface profile:
+    plotaxes = plotfigure.new_plotaxes()
+    plotaxes.axescmd = 'subplot(311)'
+    plotaxes.xlimits = xlimits
+    plotaxes.ylimits = [-0.3, 0.5]
+    plotaxes.title = 'surface'
+    plotaxes.title_with_t = False
+    plotaxes.scaled = False
+    plotaxes.afteraxes = plot_vertical_displacement
+
+    # Set axes for up-dip vertical displacement:
+    plotaxes = plotfigure.new_plotaxes()
+    plotaxes.axescmd = 'subplot(312)'
+    plotaxes.xlimits = [0.0,200.0]
+    plotaxes.ylimits = [-0.02, 0.02]
+    plotaxes.title = ('vertical displacement at x=%s' \
+                       % plotdata.getgauge(updip_gaugeno).location[0])
+    plotaxes.title_with_t = False
+    plotaxes.scaled = False
+    plotaxes.afteraxes = plot_gauge_vertical_displacement_updip
+
+    # Set axes for down-dip horizontal displacement:
+    plotaxes = plotfigure.new_plotaxes()
+    plotaxes.axescmd = 'subplot(313)'
+    plotaxes.xlimits = [0.0,200.0]
+    plotaxes.ylimits = [-0.02, 0.02]
+    plotaxes.title = ('horizontal displacement at x=%s' \
+                       % plotdata.getgauge(updip_gaugeno).location[0])
+    plotaxes.title_with_t = False
+    plotaxes.scaled = False
+    plotaxes.afteraxes = plot_gauge_horizontal_displacement_updip
+
+    # Figure for down-dip ground motion
+    plotfigure = plotdata.new_plotfigure(name='down-dip ground motion', figno=4)
+    plotfigure.kwargs = {'figsize':(8,8)}
+
+    # Set axes for surface profile:
+    plotaxes = plotfigure.new_plotaxes()
+    plotaxes.axescmd = 'subplot(311)'
+    plotaxes.xlimits = xlimits
+    plotaxes.ylimits = [-0.3, 0.5]
+    plotaxes.title = 'surface'
+    plotaxes.title_with_t = False
+    plotaxes.scaled = False
+    plotaxes.afteraxes = plot_vertical_displacement
+
+    # Set axes for up-dip vertical displacement:
+    plotaxes = plotfigure.new_plotaxes()
+    plotaxes.axescmd = 'subplot(312)'
+    plotaxes.xlimits = [0.0,200.0]
+    plotaxes.ylimits = [-0.02, 0.02]
+    plotaxes.title = ('vertical displacement at x=%s' \
+                       % plotdata.getgauge(downdip_gaugeno).location[0])
+    plotaxes.title_with_t = False
+    plotaxes.scaled = False
+    plotaxes.afteraxes = plot_gauge_vertical_displacement_downdip
+
+    # Set axes for down-dip horizontal displacement:
+    plotaxes = plotfigure.new_plotaxes()
+    plotaxes.axescmd = 'subplot(313)'
+    plotaxes.xlimits = [0.0,200.0]
+    plotaxes.ylimits = [-0.02, 0.02]
+    plotaxes.title = ('horizontal displacement at x=%s' \
+                       % plotdata.getgauge(downdip_gaugeno).location[0])
+    plotaxes.title_with_t = False
+    plotaxes.scaled = False
+    plotaxes.afteraxes = plot_gauge_horizontal_displacement_downdip
+
+
+
     # Figure for grid cells
-    plotfigure = plotdata.new_plotfigure(name='cells', figno=3)
+    plotfigure = plotdata.new_plotfigure(name='cells', figno=5)
 
     # Set up for axes in this figure:
     plotaxes = plotfigure.new_plotaxes()
     plotaxes.xlimits = xlimits
     plotaxes.ylimits = ylimits
-    plotaxes.title = 'Level 4 grid patches'
+    plotaxes.title = 'Level 3 grid patches'
     plotaxes.scaled = True
     plotaxes.afteraxes = plot_fault
 
@@ -173,7 +286,7 @@ def setplot(plotdata):
     plotitem.amr_patch_bgcolor = ['#ffeeee', '#effeee', '#eeffee', '#eeeffe',
                                   '#eeeeff', '#ffffff']
     plotitem.amr_celledges_show = [0]
-    plotitem.amr_patchedges_show = [0,0,0,0,0,1]
+    plotitem.amr_patchedges_show = [0,0,1]
     plotitem.MappedGrid = True
     plotitem.mapc2p = mapping.mapc2p
 
