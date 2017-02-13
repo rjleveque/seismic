@@ -94,10 +94,11 @@ def setplot(plotdata):
         g = plotdata.getgauge(gaugeno)
         ys = zeros(len(g.t))
         for k in range(1,len(g.t)):
+            if (g.t[k] > t):
+                break
             ys[k] = ys[k-1] + 0.5*(g.t[k]-g.t[k-1])*(g.q[4,k]+g.q[4,k-1])
 
-        plot(g.t,ys,'-b')
-        plot([t,t],[-1e9,1e9],'--k')
+        plot(g.t[0:k],ys[0:k],'-b')
 
     def plot_gauge_horizontal_displacement(t,gaugeno):
         from pylab import plot,zeros
@@ -105,11 +106,11 @@ def setplot(plotdata):
         g = plotdata.getgauge(gaugeno)
         xs = zeros(len(g.t))
         for k in range(1,len(g.t)):
+            if (g.t[k] > t):
+                break
             xs[k] = xs[k-1] + 0.5*(g.t[k]-g.t[k-1])*(g.q[3,k]+g.q[3,k-1])
 
-        plot(g.t,xs,'-b')
-        plot([t,t],[-1e9,1e9],'--k')
-
+        plot(g.t[0:k],xs[0:k],'-b')
 
     def plot_gauge_vertical_displacement_updip(current_data):
         plot_gauge_vertical_displacement(current_data.t,updip_gaugeno)
@@ -123,13 +124,52 @@ def setplot(plotdata):
     def plot_gauge_horizontal_displacement_downdip(current_data):
         plot_gauge_horizontal_displacement(current_data.t,downdip_gaugeno)
 
-    def sigmatr(current_data):
-        # return -trace(sigma)
-        q = current_data.q
-        return -(q[0,:,:] + q[1,:,:])
+    def plot_gauge_vertical_acceleration(t,gaugeno):
+        from pylab import plot,zeros
 
-    # Figure for surfaces and p-waves
-    plotfigure = plotdata.new_plotfigure(name='surface_and_p_waves', figno=1)
+        g = plotdata.getgauge(gaugeno)
+        dvs = zeros(len(g.t))
+        for k in range(1,len(g.t)):
+            if (g.t[k] > t):
+                break
+            dvs[k] = (g.q[4,k]-g.q[4,k-1])/(g.t[k]-g.t[k-1])
+
+        plot(g.t[0:k],dvs[0:k],'-r')
+
+    def plot_gauge_horizontal_acceleration(t,gaugeno):
+        from pylab import plot,zeros
+
+        g = plotdata.getgauge(gaugeno)
+        dus = zeros(len(g.t))
+        for k in range(1,len(g.t)):
+            if (g.t[k] > t):
+                break
+            dus[k] = (g.q[3,k]-g.q[3,k-1])/(g.t[k]-g.t[k-1])
+
+        plot(g.t[0:k],dus[0:k],'-r')
+
+    def plot_gauge_vertical_acceleration_updip(current_data):
+        plot_gauge_vertical_acceleration(current_data.t,updip_gaugeno)
+
+    def plot_gauge_vertical_acceleration_downdip(current_data):
+        plot_gauge_vertical_acceleration(current_data.t,downdip_gaugeno)
+
+    def plot_gauge_horizontal_acceleration_updip(current_data):
+        plot_gauge_horizontal_acceleration(current_data.t,updip_gaugeno)
+
+    def plot_gauge_horizontal_acceleration_downdip(current_data):
+        plot_gauge_horizontal_acceleration(current_data.t,downdip_gaugeno)
+
+    def dip_direction_vel(current_data):
+        # return vel dot tau, where tau is tangent to fault
+        tau_x = (xp2 - xp1)/fault_width
+        tau_y = (yp2 - yp1)/fault_width
+        u = current_data.q[3,:,:]
+        v = current_data.q[4,:,:]
+        return u*tau_x + v*tau_y
+
+    # Figure for surfaces and s-waves
+    plotfigure = plotdata.new_plotfigure(name='surface_and_s_waves', figno=1)
     plotfigure.kwargs = {'figsize':(8,8)}
 
     # Set axes for vertical displacement:
@@ -141,29 +181,29 @@ def setplot(plotdata):
     plotaxes.scaled = False
     plotaxes.afteraxes = plot_vertical_displacement
 
-    # Set axes for p waves:
+    # Set axes for slip-direction velocity:
     plotaxes = plotfigure.new_plotaxes()
     plotaxes.axescmd = 'subplot(212)'
     plotaxes.xlimits = xlimits
     plotaxes.ylimits = ylimits
-    plotaxes.title = '-trace(sigma)'
+    plotaxes.title = 'dip-direction velocity'
     plotaxes.scaled = True
     plotaxes.afteraxes = plot_fault
 
     # Set up for item on these axes:
     plotitem = plotaxes.new_plotitem(plot_type='2d_pcolor')
-    plotitem.plot_var = sigmatr
+    plotitem.plot_var = dip_direction_vel
     plotitem.pcolor_cmap = colormaps.blue_white_red
-    plotitem.pcolor_cmin = -1e6
-    plotitem.pcolor_cmax = 1e6
+    plotitem.pcolor_cmin = -0.01
+    plotitem.pcolor_cmax = 0.01
     plotitem.add_colorbar = False
     plotitem.amr_celledges_show = [0]
     plotitem.amr_patchedges_show = [0]
     plotitem.MappedGrid = True
     plotitem.mapc2p = mapping.mapc2p
 
-    # Figure for surfaces and p-waves
-    plotfigure = plotdata.new_plotfigure(name='surface_and_p_waves (truncated)', figno=2)
+    # Figure for surfaces and s-waves
+    plotfigure = plotdata.new_plotfigure(name='surface_and_s_waves (truncated)', figno=2)
     plotfigure.kwargs = {'figsize':(8,8)}
 
     # Set axes for vertical displacement:
@@ -171,25 +211,25 @@ def setplot(plotdata):
     plotaxes.axescmd = 'subplot(211)'
     plotaxes.xlimits = xlimits_trunc
     plotaxes.ylimits = [-0.3, 0.5]
-    plotaxes.title = 'vertical displacement at x='
+    plotaxes.title = 'vertical displacement'
     plotaxes.scaled = False
     plotaxes.afteraxes = plot_vertical_displacement
 
-    # Set axes for p waves:
+    # Set axes for slip-direction velocity:
     plotaxes = plotfigure.new_plotaxes()
     plotaxes.axescmd = 'subplot(212)'
     plotaxes.xlimits = xlimits_trunc
     plotaxes.ylimits = ylimits_trunc
-    plotaxes.title = '-trace(sigma)'
+    plotaxes.title = 'dip-direction velocity'
     plotaxes.scaled = True
     plotaxes.afteraxes = plot_fault
 
     # Set up for item on these axes:
     plotitem = plotaxes.new_plotitem(plot_type='2d_pcolor')
-    plotitem.plot_var = sigmatr
+    plotitem.plot_var = dip_direction_vel
     plotitem.pcolor_cmap = colormaps.blue_white_red
-    plotitem.pcolor_cmin = -1e6
-    plotitem.pcolor_cmax = 1e6
+    plotitem.pcolor_cmin = -0.01
+    plotitem.pcolor_cmax = 0.01
     plotitem.add_colorbar = False
     plotitem.amr_celledges_show = [0]
     plotitem.amr_patchedges_show = [0]
@@ -203,7 +243,7 @@ def setplot(plotdata):
     # Set axes for surface profile:
     plotaxes = plotfigure.new_plotaxes()
     plotaxes.axescmd = 'subplot(311)'
-    plotaxes.xlimits = xlimits
+    plotaxes.xlimits = xlimits_trunc
     plotaxes.ylimits = [-0.3, 0.5]
     plotaxes.title = 'surface'
     plotaxes.title_with_t = False
@@ -221,11 +261,11 @@ def setplot(plotdata):
     plotaxes.scaled = False
     plotaxes.afteraxes = plot_gauge_vertical_displacement_updip
 
-    # Set axes for down-dip horizontal displacement:
+    # Set axes for up-dip horizontal displacement:
     plotaxes = plotfigure.new_plotaxes()
     plotaxes.axescmd = 'subplot(313)'
     plotaxes.xlimits = [0.0,200.0]
-    plotaxes.ylimits = [-0.02, 0.02]
+    plotaxes.ylimits = [-0.01, 0.02]
     plotaxes.title = ('horizontal displacement at x=%s' \
                        % plotdata.getgauge(updip_gaugeno).location[0])
     plotaxes.title_with_t = False
@@ -239,18 +279,18 @@ def setplot(plotdata):
     # Set axes for surface profile:
     plotaxes = plotfigure.new_plotaxes()
     plotaxes.axescmd = 'subplot(311)'
-    plotaxes.xlimits = xlimits
+    plotaxes.xlimits = xlimits_trunc
     plotaxes.ylimits = [-0.3, 0.5]
     plotaxes.title = 'surface'
     plotaxes.title_with_t = False
     plotaxes.scaled = False
     plotaxes.afteraxes = plot_vertical_displacement
 
-    # Set axes for up-dip vertical displacement:
+    # Set axes for down-dip vertical displacement:
     plotaxes = plotfigure.new_plotaxes()
     plotaxes.axescmd = 'subplot(312)'
     plotaxes.xlimits = [0.0,200.0]
-    plotaxes.ylimits = [-0.02, 0.02]
+    plotaxes.ylimits = [-0.03, 0.02]
     plotaxes.title = ('vertical displacement at x=%s' \
                        % plotdata.getgauge(downdip_gaugeno).location[0])
     plotaxes.title_with_t = False
@@ -261,17 +301,87 @@ def setplot(plotdata):
     plotaxes = plotfigure.new_plotaxes()
     plotaxes.axescmd = 'subplot(313)'
     plotaxes.xlimits = [0.0,200.0]
-    plotaxes.ylimits = [-0.02, 0.02]
+    plotaxes.ylimits = [-0.08, 0.01]
     plotaxes.title = ('horizontal displacement at x=%s' \
                        % plotdata.getgauge(downdip_gaugeno).location[0])
     plotaxes.title_with_t = False
     plotaxes.scaled = False
     plotaxes.afteraxes = plot_gauge_horizontal_displacement_downdip
 
+    # Figure for up-dip ground acceleration
+    plotfigure = plotdata.new_plotfigure(name='up-dip ground acceleration', figno=5)
+    plotfigure.kwargs = {'figsize':(8,8)}
 
+    # Set axes for surface profile:
+    plotaxes = plotfigure.new_plotaxes()
+    plotaxes.axescmd = 'subplot(311)'
+    plotaxes.xlimits = xlimits_trunc
+    plotaxes.ylimits = [-0.3, 0.5]
+    plotaxes.title = 'surface'
+    plotaxes.title_with_t = False
+    plotaxes.scaled = False
+    plotaxes.afteraxes = plot_vertical_displacement
+
+    # Set axes for up-dip vertical acceleration:
+    plotaxes = plotfigure.new_plotaxes()
+    plotaxes.axescmd = 'subplot(312)'
+    plotaxes.xlimits = [0.0,200.0]
+    plotaxes.ylimits = [-0.015, 0.015]
+    plotaxes.title = ('vertical acceleration at x=%s' \
+                       % plotdata.getgauge(updip_gaugeno).location[0])
+    plotaxes.title_with_t = False
+    plotaxes.scaled = False
+    plotaxes.afteraxes = plot_gauge_vertical_acceleration_updip
+
+    # Set axes for up-dip horizontal acceleration:
+    plotaxes = plotfigure.new_plotaxes()
+    plotaxes.axescmd = 'subplot(313)'
+    plotaxes.xlimits = [0.0,200.0]
+    plotaxes.ylimits = [-0.015, 0.015]
+    plotaxes.title = ('horizontal acceleration at x=%s' \
+                       % plotdata.getgauge(updip_gaugeno).location[0])
+    plotaxes.title_with_t = False
+    plotaxes.scaled = False
+    plotaxes.afteraxes = plot_gauge_horizontal_acceleration_updip
+
+    # Figure for down-dip ground acceleration
+    plotfigure = plotdata.new_plotfigure(name='down-dip ground acceleration', figno=6)
+    plotfigure.kwargs = {'figsize':(8,8)}
+
+    # Set axes for surface profile:
+    plotaxes = plotfigure.new_plotaxes()
+    plotaxes.axescmd = 'subplot(311)'
+    plotaxes.xlimits = xlimits_trunc
+    plotaxes.ylimits = [-0.3, 0.5]
+    plotaxes.title = 'surface'
+    plotaxes.title_with_t = False
+    plotaxes.scaled = False
+    plotaxes.afteraxes = plot_vertical_displacement
+
+    # Set axes for down-dip vertical acceleration:
+    plotaxes = plotfigure.new_plotaxes()
+    plotaxes.axescmd = 'subplot(312)'
+    plotaxes.xlimits = [0.0,200.0]
+    plotaxes.ylimits = [-0.015, 0.015]
+    plotaxes.title = ('vertical acceleration at x=%s' \
+                       % plotdata.getgauge(downdip_gaugeno).location[0])
+    plotaxes.title_with_t = False
+    plotaxes.scaled = False
+    plotaxes.afteraxes = plot_gauge_vertical_acceleration_downdip
+
+    # Set axes for down-dip horizontal acceleration:
+    plotaxes = plotfigure.new_plotaxes()
+    plotaxes.axescmd = 'subplot(313)'
+    plotaxes.xlimits = [0.0,200.0]
+    plotaxes.ylimits = [-0.015, 0.015]
+    plotaxes.title = ('horizontal acceleration at x=%s' \
+                       % plotdata.getgauge(downdip_gaugeno).location[0])
+    plotaxes.title_with_t = False
+    plotaxes.scaled = False
+    plotaxes.afteraxes = plot_gauge_horizontal_acceleration_downdip
 
     # Figure for grid cells
-    plotfigure = plotdata.new_plotfigure(name='cells', figno=5)
+    plotfigure = plotdata.new_plotfigure(name='cells', figno=7)
 
     # Set up for axes in this figure:
     plotaxes = plotfigure.new_plotaxes()
