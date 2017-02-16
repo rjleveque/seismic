@@ -62,7 +62,7 @@ def setplot(plotdata):
     for j in range(ngauges):
         g = plotdata.getgauge(j)
         xc[j] = g.location[0]
-    fault.create_dtopography(xc/LAT2METER,np.array([0.]),[1.0],y_disp=True)
+    fault.create_dtopography(xc/LAT2METER,np.array([0.]),[1.0],horiz_disp=True)
 
     def plot_vertical_displacement(current_data):
         from pylab import plot,zeros,gca, legend
