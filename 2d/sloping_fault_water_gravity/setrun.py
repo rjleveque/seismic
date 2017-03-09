@@ -42,7 +42,7 @@ def setrun(claw_pkg='amrclaw'):
     # Sample setup to write one line to setprob.data ...
     probdata = rundata.new_UserData(name='probdata',fname='setprob.data')
     probdata.add_param('water_scaling', 0, 'ratio automatically set for mapping')
-    probdata.add_param('abl_depth', 10e3, 'depth of absorbing layer')
+    probdata.add_param('abl_depth', 30e3, 'depth of absorbing layer')
     probdata.add_param('domain_depth', 50e3, 'depth of domain')
     probdata.add_param('domain_width', 300e3, 'width of domain')
     probdata.add_param('water_depth', 3e3, 'depth of water')
@@ -301,7 +301,7 @@ def setrun(claw_pkg='amrclaw'):
     # Specify when checkpoint files should be created that can be
     # used to restart a computation.
 
-    clawdata.checkpt_style = 2
+    clawdata.checkpt_style = 0
 
     if clawdata.checkpt_style == 0:
       # Do not checkpoint at all

@@ -24,6 +24,8 @@ subroutine src2(meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux,t,dt)
         q(6,i,j) = q(6,i,j) + 0.5d0*dt*q(5,i,j)
         if (ycell > 0.d0) then
           q(5,i,j) = q(5,i,j) - dt*g/lambda_water*0.5d0*(q(1,i,j)+q(2,i,j))
+        else
+          q(5,i,j) = q(5,i,j) - dt*g/lambda_plate*0.5d0*(q(1,i,j)+q(2,i,j))
         end if
         q(6,i,j) = q(6,i,j) + 0.5d0*dt*q(5,i,j)
       end do
