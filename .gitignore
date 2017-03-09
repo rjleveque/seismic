@@ -13,6 +13,9 @@ xclaw
 xamr
 xgeoclaw
 *.html
-_output/
-_plots/
+_output*/
+output*/
+_plots*/
+plots*/
 *~
+*.png
