@@ -28,8 +28,13 @@ c
           w2 = 1.d0 - w1
 
           aux(1,i,j) = w1*rho1 + w2*rho2
-          aux(2,i,j) = w1*alam1 + w2*alam2
-          aux(3,i,j) = w1*amu1 + w2*amu2
+          !aux(2,i,j) = w1*alam1 + w2*alam2
+          !aux(3,i,j) = w1*amu1 + w2*amu2
+          aux(2,i,j) = 1.d0/(w1/alam1 + w2/alam2)
+          aux(3,i,j) = 1.d0/(w1/amu1 + w2/amu2)
+          !bulk1      = alam1 + 2.d0*amu1
+          !bulk2      = alam2 + 2.d0*amu2
+          !bulk       = 1.d0/(w1/bulk1 + w2/bulk2)
           bulk       = aux(2,i,j) + 2.d0*aux(3,i,j)
           aux(4,i,j) = dsqrt(bulk/aux(1,i,j))
           aux(5,i,j) = dsqrt(aux(3,i,j)/aux(1,i,j))

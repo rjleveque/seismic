@@ -28,10 +28,9 @@ def setplot(plotdata):
     def plot_interfaces(current_data):
         from pylab import linspace, plot
         xl = linspace(-40e3, 40e3, 101)
-        yl = -4000. + 0*xl
+        #yl = -4000. + 0*xl
+        yl = -7000. + 6000*(xl+40e3)/80e3
         plot(xl,yl,'k')
-        #yl = 0.4 + 0.3*(xl-0.5) - 0.2*(xl-0.5)**2
-        #plot(xl,yl,'k')
     
 
     def sigmatr(current_data):

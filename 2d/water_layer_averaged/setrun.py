@@ -39,7 +39,7 @@ def setrun(claw_pkg='amrclaw'):
     probdata = rundata.new_UserData(name='probdata',fname='setprob.data')
     probdata.add_param('rho1',  1000.0,  'density in top layer (kg/m**3)')
     probdata.add_param('lam1',   2.2e9,  'lambda in top layer (Pa)')
-    probdata.add_param('mu1',    0.001e9,  'mu in top layer (Pa)')
+    probdata.add_param('mu1',    0.001e8,  'mu in top layer (Pa)')
     probdata.add_param('rho2',  2500.0,  'density in bottom layer (kg/m**3)')
     probdata.add_param('lam2',   60.e9,  'lambda in bottom layer (Pa)')
     probdata.add_param('mu2',    30.e9, 'mu in bottom layer (Pa)')
