@@ -1,8 +1,8 @@
       subroutine setprob
       implicit double precision (a-h,o-z)
       character*12 fname
-      common /comaux/ rho1,amu1,alam1,rho2,amu2,alam2,rho3,amu3,alam3
-      common /combc/ t0wall,tperiod,pi2,amplitude
+      common /comaux/ rho1,amu1,alam1,rho2,amu2,alam2
+      common /combc/ t0wall,pi2,amplitude
 
 c
 c     # Set the material parameters for the elasticity equations
@@ -27,12 +27,7 @@ c     # Material parameters
       read(7,*) alam2
       read(7,*) amu2
 
-      read(7,*) rho3
-      read(7,*) alam3
-      read(7,*) amu3
-
       read(7,*) t0wall
-      read(7,*) tperiod
       read(7,*) amplitude
       pi2 = 8.d0*datan(1.d0)
 

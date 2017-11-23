@@ -17,7 +17,7 @@ c
 c     
       implicit double precision (a-h,o-z)
       dimension aux(5,1-mbc:mx+mbc,1-mbc:my+mbc)
-      common /comaux/ rho1,amu1,alam1,rho2,amu2,alam2,rho3,amu3,alam3
+      common /comaux/ rho1,amu1,alam1,rho2,amu2,alam2
 
 
       do 30 j=1-mbc,my+mbc

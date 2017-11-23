@@ -27,8 +27,8 @@ def setplot(plotdata):
     
     def plot_interfaces(current_data):
         from pylab import linspace, plot
-        xl = linspace(0,2,101)
-        yl = 0.4 + 0.2*xl
+        xl = linspace(-40e3, 40e3, 101)
+        yl = -4000. + 0*xl
         plot(xl,yl,'k')
         #yl = 0.4 + 0.3*(xl-0.5) - 0.2*(xl-0.5)**2
         #plot(xl,yl,'k')
@@ -92,13 +92,13 @@ def setplot(plotdata):
 
     # Figure for trace(sigma) and sigma_12 side by side
     plotfigure = plotdata.new_plotfigure(name='P and S waves', figno=11)
-    plotfigure.kwargs = {'figsize':(15,10)}
+    plotfigure.kwargs = {'figsize':(10,8)}
 
     # Set up for axes in this figure:
     plotaxes = plotfigure.new_plotaxes()
     plotaxes.axescmd = 'axes([.1,.6,.35,.4])' # 'subplot(221)'
-    plotaxes.xlimits = [0,2]
-    plotaxes.ylimits = [0,1]
+    #plotaxes.xlimits = [0,2]
+    #plotaxes.ylimits = [0,1]
     plotaxes.title = 'trace(sigma)'
     plotaxes.scaled = True
     plotaxes.afteraxes = plot_interfaces
@@ -107,16 +107,16 @@ def setplot(plotdata):
     plotitem = plotaxes.new_plotitem(plot_type='2d_pcolor')
     plotitem.plot_var = sigmatr
     plotitem.pcolor_cmap = colormaps.blue_white_red
-    plotitem.pcolor_cmin = -0.003
-    plotitem.pcolor_cmax = 0.003
+    plotitem.pcolor_cmin = -1e7
+    plotitem.pcolor_cmax = 1e7
     plotitem.add_colorbar = False
     plotitem.amr_celledges_show = [False]
     plotitem.amr_patchedges_show = [0]
 
     plotaxes = plotfigure.new_plotaxes()
     plotaxes.axescmd = 'axes([.5,.6,.45,.4])' # 'subplot(222)'
-    plotaxes.xlimits = [0,2]
-    plotaxes.ylimits = [0,1]
+    #plotaxes.xlimits = [0,2]
+    #plotaxes.ylimits = [0,1]
     plotaxes.title = 'sigma_12'
     plotaxes.scaled = True
     plotaxes.afteraxes = plot_interfaces
@@ -125,8 +125,8 @@ def setplot(plotdata):
     plotitem = plotaxes.new_plotitem(plot_type='2d_pcolor')
     plotitem.plot_var = 2
     plotitem.pcolor_cmap = colormaps.blue_white_red
-    plotitem.pcolor_cmin = -0.003
-    plotitem.pcolor_cmax = 0.003
+    plotitem.pcolor_cmin = -1e7
+    plotitem.pcolor_cmax = 1e7
     plotitem.add_colorbar = True
     plotitem.colorbar_shrink = 0.7
     plotitem.amr_celledges_show = [False]
@@ -135,8 +135,8 @@ def setplot(plotdata):
 
     plotaxes = plotfigure.new_plotaxes()
     plotaxes.axescmd = 'axes([.1,.1,.35,.4])' # 'subplot(223)'
-    plotaxes.xlimits = [0,2]
-    plotaxes.ylimits = [0,1]
+    #plotaxes.xlimits = [0,2]
+    #plotaxes.ylimits = [0,1]
     plotaxes.title = 'div(u)'
     plotaxes.scaled = True
     plotaxes.afteraxes = plot_interfaces
@@ -145,8 +145,8 @@ def setplot(plotdata):
     plotitem = plotaxes.new_plotitem(plot_type='2d_pcolor')
     plotitem.plot_var = div
     plotitem.pcolor_cmap = colormaps.blue_white_red
-    plotitem.pcolor_cmin = -0.1
-    plotitem.pcolor_cmax = 0.1
+    plotitem.pcolor_cmin = -0.0005
+    plotitem.pcolor_cmax = 0.0005
     plotitem.add_colorbar = False
     plotitem.amr_celledges_show = [False]
     plotitem.amr_patchedges_show = [0]
@@ -155,8 +155,8 @@ def setplot(plotdata):
     # Figure for curl:
     plotaxes = plotfigure.new_plotaxes()
     plotaxes.axescmd = 'axes([.5,.1,.45,.4])' # 'subplot(224)'
-    plotaxes.xlimits = [0,2]
-    plotaxes.ylimits = [0,1]
+    #plotaxes.xlimits = [0,2]
+    #plotaxes.ylimits = [0,1]
     plotaxes.title = 'curl(u)'
     plotaxes.scaled = True
     plotaxes.afteraxes = plot_interfaces
@@ -165,8 +165,8 @@ def setplot(plotdata):
     plotitem = plotaxes.new_plotitem(plot_type='2d_pcolor')
     plotitem.plot_var = curl
     plotitem.pcolor_cmap = colormaps.blue_white_red
-    plotitem.pcolor_cmin = -0.1
-    plotitem.pcolor_cmax = 0.1
+    plotitem.pcolor_cmin = -0.0005
+    plotitem.pcolor_cmax = 0.0005
     plotitem.add_colorbar = True
     plotitem.colorbar_shrink = 0.7
     plotitem.amr_celledges_show = [False]
@@ -179,8 +179,8 @@ def setplot(plotdata):
 
     # Set up for axes in this figure:
     plotaxes = plotfigure.new_plotaxes()
-    plotaxes.xlimits = [0,2]
-    plotaxes.ylimits = [0,1]
+    #plotaxes.xlimits = [0,2]
+    #plotaxes.ylimits = [0,1]
     plotaxes.title = 'Grid patches'
     plotaxes.scaled = True
 

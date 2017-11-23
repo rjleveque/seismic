@@ -37,18 +37,14 @@ def setrun(claw_pkg='amrclaw'):
     #------------------------------------------------------------------
     # Sample setup to write one line to setprob.data ...
     probdata = rundata.new_UserData(name='probdata',fname='setprob.data')
-    probdata.add_param('rho1',     2.0,  'density in top layer')
-    probdata.add_param('lam1',     4.0,  'lambda in top layer')
-    probdata.add_param('mu1',     0.001,  'mu in top layer')
-    probdata.add_param('rho2',     5.0,  'density in middle layer')
-    probdata.add_param('lam2',     10.0,  'lambda in middle layer')
-    probdata.add_param('mu2',     5.0,  'mu in middle layer')
-    probdata.add_param('rho3',     2.0,  'density in bottom layer')
-    probdata.add_param('lam3',     1.0,  'lambda in bottom layer')
-    probdata.add_param('mu3',     1.0,  'mu in bottom layer')
-    probdata.add_param('t0wall',     0.005,  'time duration of force')
-    probdata.add_param('tperiod',     0.005,  'period of force')
-    probdata.add_param('amplitude',   1.0,  'max amplitude of force')
+    probdata.add_param('rho1',  1000.0,  'density in top layer (kg/m**3)')
+    probdata.add_param('lam1',   2.2e9,  'lambda in top layer (Pa)')
+    probdata.add_param('mu1',    0.001e9,  'mu in top layer (Pa)')
+    probdata.add_param('rho2',  2500.0,  'density in bottom layer (kg/m**3)')
+    probdata.add_param('lam2',   60.e9,  'lambda in bottom layer (Pa)')
+    probdata.add_param('mu2',    30.e9, 'mu in bottom layer (Pa)')
+    probdata.add_param('t0wall',     1.,  'time duration of force')
+    probdata.add_param('amplitude',  1.e8,  'max amplitude of force')
     
     #------------------------------------------------------------------
     # Standard Clawpack parameters to be written to claw.data:
@@ -65,14 +61,14 @@ def setrun(claw_pkg='amrclaw'):
     clawdata.num_dim = num_dim
     
     # Lower and upper edge of computational domain:
-    clawdata.lower[0] = 0.0          # xlower
-    clawdata.upper[0] = 2.0          # xupper
-    clawdata.lower[1] = 0.0          # ylower
-    clawdata.upper[1] = 1.0          # yupper
+    clawdata.lower[0] = -40e3       # xlower
+    clawdata.upper[0] = 40e3        # xupper
+    clawdata.lower[1] = -40e3        # ylower
+    clawdata.upper[1] = 0.0          # yupper
     
     # Number of grid cells:
-    clawdata.num_cells[0] = 40      # mx
-    clawdata.num_cells[1] = 20      # my
+    clawdata.num_cells[0] =  40      # mx
+    clawdata.num_cells[1] =  20     # my
     
 
     # ---------------
@@ -120,7 +116,7 @@ def setrun(claw_pkg='amrclaw'):
         # Output ntimes frames at equally spaced times up to tfinal:
         # Can specify num_output_times = 0 for no output
         clawdata.num_output_times = 40
-        clawdata.tfinal = 2.0
+        clawdata.tfinal = 20.
         clawdata.output_t0 = True  # output at initial (or restart) time?
         
     elif clawdata.output_style == 2:
@@ -149,7 +145,7 @@ def setrun(claw_pkg='amrclaw'):
     # The current t, dt, and cfl will be printed every time step
     # at AMR levels <= verbosity.  Set verbosity = 0 for no printing.
     #   (E.g. verbosity == 2 means print only on levels 1 and 2.)
-    clawdata.verbosity = 0
+    clawdata.verbosity = 1
     
     
 
@@ -243,8 +239,8 @@ def setrun(claw_pkg='amrclaw'):
     # ---------------
     gauges = rundata.gaugedata.gauges 
     # for gauges append lines of the form  [gaugeno, x, y, t1, t2]
-    for gaugeno,x in enumerate(np.linspace(0.2,1.9,18)):
-        gauges.append([gaugeno,x,0.99,0,1e10])
+    for gaugeno,x in enumerate(np.linspace(-1000,1000,3)):
+        gauges.append([gaugeno,x,-1,0,1e10])
 
                   
     # --------------

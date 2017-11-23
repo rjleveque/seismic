@@ -85,9 +85,9 @@ c ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::;
       integer nxl,nxr,ibeg,nyb,nyt,jbeg,i,j,m
       
       real*8 s, xcell
-      real*8 t0wall,tperiod,pi2,amplitude 
+      real*8 t0wall,pi2,amplitude 
       ! needed for stress at top boundary:
-      common /combc/ t0wall,tperiod,pi2,amplitude
+      common /combc/ t0wall,pi2,amplitude
 
       hxmarg = hx*.01
       hymarg = hy*.01
@@ -216,7 +216,7 @@ c
   300 continue
 c     # force applied to bottom surface with sig22 = s
       if (time.lt.t0wall) then
-          s = amplitude*(1.d0 - cos(pi2*time/tperiod)) / 2.d0
+          s = amplitude*(1.d0 - cos(pi2*time/t0wall)) / 2.d0
         else
           s = 0.d0
         endif
@@ -232,7 +232,7 @@ c     # adjust the stress:
       do 306 j=1,nyb
          do 306 i=1,nrow
             xcell = xlo_patch + (i-0.5d0)*hx
-            if (xcell.gt.0.99d0 .and. xcell.lt.1.01d0) then
+            if (xcell.gt.-10e3 .and. xcell.lt.10e3) then
 c               # portion of boundary where stress sig22 is applied:
                 val(2,i,j) = 2.d0*s -val(2,i,nyb+1)
                 val(3,i,j) = - val(3,i,nyb+1)
