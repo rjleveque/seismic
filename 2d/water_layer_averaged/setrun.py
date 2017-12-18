@@ -39,11 +39,11 @@ def setrun(claw_pkg='amrclaw'):
     probdata = rundata.new_UserData(name='probdata',fname='setprob.data')
     probdata.add_param('rho1',  1000.0,  'density in top layer (kg/m**3)')
     probdata.add_param('lam1',   2.2e9,  'lambda in top layer (Pa)')
-    probdata.add_param('mu1',    0.001e8,  'mu in top layer (Pa)')
+    probdata.add_param('mu1',    0.003e9,  'mu in top layer (Pa)')
     probdata.add_param('rho2',  2500.0,  'density in bottom layer (kg/m**3)')
     probdata.add_param('lam2',   60.e9,  'lambda in bottom layer (Pa)')
     probdata.add_param('mu2',    30.e9, 'mu in bottom layer (Pa)')
-    probdata.add_param('t0wall',     1.,  'time duration of force')
+    probdata.add_param('t0wall',    0.2,  'time duration of force')
     probdata.add_param('amplitude',  1.e8,  'max amplitude of force')
     
     #------------------------------------------------------------------
@@ -239,8 +239,11 @@ def setrun(claw_pkg='amrclaw'):
     # ---------------
     gauges = rundata.gaugedata.gauges 
     # for gauges append lines of the form  [gaugeno, x, y, t1, t2]
-    for gaugeno,x in enumerate(np.linspace(-1000,1000,3)):
+    yy = [-19843.75, -19375., -18906.25]
+    for gaugeno,x in enumerate(np.linspace(-10e3,10e3,3)):
         gauges.append([gaugeno,x,-1,0,1e10])
+        gauges.append([100+gaugeno,x,yy[gaugeno],0,1e10])
+        gauges.append([200+gaugeno,x,-39990,0,1e10])
 
                   
     # --------------
@@ -277,7 +280,7 @@ def setrun(claw_pkg='amrclaw'):
     amrdata = rundata.amrdata
 
     # max number of refinement levels:
-    amrdata.amr_levels_max = 3
+    amrdata.amr_levels_max = 4
 
     # List of refinement ratios at each level (length at least
     # amr_level_max-1)
@@ -327,7 +330,9 @@ def setrun(claw_pkg='amrclaw'):
     regions = rundata.regiondata.regions 
     # to specify regions of refinement append lines of the form
     #  [minlevel,maxlevel,t1,t2,x1,x2,y1,y2]
-    regions.append([3,4,0,0.1,.85,1.15,0.0,0.1])
+    regions.append([1,3,0,1e9,-100e3,100e3,-50e3,0])
+    regions.append([3,3,0,0.2,-12e3,12e3,-40e3,-36e3])
+    regions.append([4,4,0,0.1,-11e3,11e3,-40e3,-38e3])
 
 
 

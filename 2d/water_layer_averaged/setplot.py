@@ -9,6 +9,8 @@ function setplot is called to set the plot parameters.
 
 import numpy as np
 
+csig = 2e6
+
 #--------------------------
 def setplot(plotdata):
 #--------------------------
@@ -29,7 +31,7 @@ def setplot(plotdata):
         from pylab import linspace, plot
         xl = linspace(-40e3, 40e3, 101)
         #yl = -4000. + 0*xl
-        yl = -7000. + 6000*(xl+40e3)/80e3
+        yl = -10000. + 6000*(xl+40e3)/80e3
         plot(xl,yl,'k')
     
 
@@ -91,7 +93,7 @@ def setplot(plotdata):
 
     # Figure for trace(sigma) and sigma_12 side by side
     plotfigure = plotdata.new_plotfigure(name='P and S waves', figno=11)
-    plotfigure.kwargs = {'figsize':(10,8)}
+    plotfigure.kwargs = {'figsize':(13,8)}
 
     # Set up for axes in this figure:
     plotaxes = plotfigure.new_plotaxes()
@@ -106,8 +108,8 @@ def setplot(plotdata):
     plotitem = plotaxes.new_plotitem(plot_type='2d_pcolor')
     plotitem.plot_var = sigmatr
     plotitem.pcolor_cmap = colormaps.blue_white_red
-    plotitem.pcolor_cmin = -1e7
-    plotitem.pcolor_cmax = 1e7
+    plotitem.pcolor_cmin = -csig
+    plotitem.pcolor_cmax = csig
     plotitem.add_colorbar = False
     plotitem.amr_celledges_show = [False]
     plotitem.amr_patchedges_show = [0]
@@ -124,8 +126,8 @@ def setplot(plotdata):
     plotitem = plotaxes.new_plotitem(plot_type='2d_pcolor')
     plotitem.plot_var = 2
     plotitem.pcolor_cmap = colormaps.blue_white_red
-    plotitem.pcolor_cmin = -1e7
-    plotitem.pcolor_cmax = 1e7
+    plotitem.pcolor_cmin = -csig
+    plotitem.pcolor_cmax = csig
     plotitem.add_colorbar = True
     plotitem.colorbar_shrink = 0.7
     plotitem.amr_celledges_show = [False]
@@ -216,6 +218,32 @@ def setplot(plotdata):
     # Plot surface as blue curve:
     plotitem = plotaxes.new_plotitem(plot_type='1d_plot')
     plotitem.plot_var = 4
+    plotitem.plotstyle = 'b-'
+
+
+    plotfigure = plotdata.new_plotfigure(name='gauge plot sigma', figno=301, \
+                    type='each_gauge')
+    #plotfigure.clf_each_gauge = False
+
+    # Set up for axes in this figure:
+    plotaxes = plotfigure.new_plotaxes()
+    plotaxes.axescmd = 'subplot(2,1,1)'
+    plotaxes.ylimits = 'auto'
+    plotaxes.title = 'sigma11'
+
+    # Plot surface as blue curve:
+    plotitem = plotaxes.new_plotitem(plot_type='1d_plot')
+    plotitem.plot_var = 1
+    plotitem.plotstyle = 'b-'
+
+    plotaxes = plotfigure.new_plotaxes()
+    plotaxes.axescmd = 'subplot(2,1,2)'
+    plotaxes.ylimits = 'auto'
+    plotaxes.title = 'sigma22'
+
+    # Plot surface as blue curve:
+    plotitem = plotaxes.new_plotitem(plot_type='1d_plot')
+    plotitem.plot_var = 2
     plotitem.plotstyle = 'b-'
 
 

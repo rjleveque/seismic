@@ -229,10 +229,11 @@ c     # zero-order extrapolation:
   305       continue
 
 c     # adjust the stress:
+      if (time.lt.t0wall) then
       do 306 j=1,nyb
          do 306 i=1,nrow
             xcell = xlo_patch + (i-0.5d0)*hx
-            if (xcell.gt.-10e3 .and. xcell.lt.10e3) then
+            if (xcell.gt.-4d3 .and. xcell.lt.4d3) then
 c               # portion of boundary where stress sig22 is applied:
                 val(2,i,j) = 2.d0*s -val(2,i,nyb+1)
                 val(3,i,j) = - val(3,i,nyb+1)
@@ -242,6 +243,7 @@ c               # no-stress portion of boundary:
                 val(2,i,j) = -val(2,i,nyb+1)
               endif
   306    continue
+       endif
       go to 399
 c
   310 continue

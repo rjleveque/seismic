@@ -14,7 +14,7 @@ c     # left of the curve and positive to the right
 
 c     # fdisc is positive in the lower layer, negative in upper
 
-      fdisc = -7000. + 6000.*(x+40.d3)/80.d3  - y
+      fdisc = -10000. + 6000.*(x+40.d3)/80.d3  - y
 c
       return
       end
