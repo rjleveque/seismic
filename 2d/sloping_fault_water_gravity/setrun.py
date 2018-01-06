@@ -11,6 +11,7 @@ import numpy as np
 import clawpack.seismic.dtopotools_horiz_okada_and_1d as dtopotools
 reload(dtopotools)
 from clawpack.seismic.mappings import Mapping2D
+from make_topo_and_grid import get_oceanfloor_parameters
 
 
 #------------------------------
@@ -30,23 +31,27 @@ def setrun(claw_pkg='amrclaw'):
 
     from clawpack.clawutil import data
 
-
     assert claw_pkg.lower() == 'amrclaw',  "Expected claw_pkg = 'amrclaw'"
 
     num_dim = 2
     rundata = data.ClawRunData(claw_pkg, num_dim)
 
+    # Obtain topography parameters to match 1D Geoclaw
+    xlower_domain, xlower_slope, xlower_shelf, xlower_beach, xlower_shore, xupper_domain, \
+      zlower_ocean, zlower_shelf, zlower_beach, zlower_shore = get_oceanfloor_parameters()
+
+    # Adjust topo parameters to remove shore
+    xupper_domain = xlower_shore
+
     #------------------------------------------------------------------
     # Problem-specific parameters to be written to setprob.data:
     #------------------------------------------------------------------
-    # Sample setup to write one line to setprob.data ...
     probdata = rundata.new_UserData(name='probdata',fname='setprob.data')
     probdata.add_param('water_scaling', 0, 'ratio automatically set for mapping')
     probdata.add_param('abl_depth', 30e3, 'depth of absorbing layer')
     probdata.add_param('domain_depth', 50e3, 'depth of domain')
-    probdata.add_param('domain_width', 300e3, 'width of domain')
-    probdata.add_param('water_depth', 3e3, 'depth of water')
-
+    probdata.add_param('domain_width', xupper_domain-xlower_domain, 'width of domain')
+    probdata.add_param('sink_depth', 100.0, 'depth the shore is sunk to')
 
     #------------------------------------------------------------------
     # Read in fault information
@@ -80,33 +85,35 @@ def setrun(claw_pkg='amrclaw'):
 
     # Number of grid cells:
     num_cells_fault = 10
-    dx = fault_width/num_cells_fault
 
     # determine cell number and set computational boundaries
-    target_num_cells = np.rint(probdata.domain_width/dx)    # x direction
-    num_cells_below = np.rint((target_num_cells - num_cells_fault)/2.0)
-    num_cells_above = target_num_cells - num_cells_below - num_cells_fault
-    clawdata.lower[0] = fault_center-0.5*fault_width - num_cells_below*dx
-    clawdata.upper[0] = fault_center+0.5*fault_width + num_cells_above*dx
-    clawdata.num_cells[0] = int(num_cells_below + num_cells_fault + num_cells_above)
-
-    num_cells_above_fault = np.rint(fault_depth/dx) # y direction
-    dy = fault_depth/num_cells_above_fault
-    num_cells_water = np.ceil(probdata.water_depth/dy)
-    target_num_cells_below_floor = np.rint(probdata.domain_depth/dy)
-    num_cells_below_fault = target_num_cells_below_floor - num_cells_above_fault
-    clawdata.lower[1] = -fault_depth - num_cells_below_fault*dy
-    clawdata.upper[1] = num_cells_water*dy
-    clawdata.num_cells[1] = int(num_cells_below_fault + num_cells_above_fault + num_cells_water)
-    probdata.water_scaling = probdata.water_depth/clawdata.upper[1]
+    target_dh = fault_width/num_cells_fault
+    # x direction
+    num_cells_above_fault = np.rint((xupper_domain - (fault_center+0.5*fault_width))/target_dh)
+    dx = (xupper_domain - (fault_center+0.5*fault_width))/num_cells_above_fault
+    target_num_cells = np.rint(probdata.domain_width/dx)
+    num_cells_below_fault = target_num_cells - num_cells_above_fault - num_cells_fault
+    clawdata.num_cells[0] = int(target_num_cells)
+    clawdata.lower[0] = fault_center-0.5*fault_width - num_cells_below_fault*dx
+    clawdata.upper[0] = fault_center+0.5*fault_width + num_cells_above_fault*dx
+    # z direction
+    num_cells_above_fault_below_ocean = np.rint((fault_depth+zlower_ocean)/target_dh)
+    dz = (fault_depth+zlower_ocean)/num_cells_above_fault_below_ocean
+    num_cells_ocean = np.ceil(-zlower_ocean/dz)
+    num_cells_above_fault = num_cells_above_fault_below_ocean + num_cells_ocean
+    target_num_cells = np.rint(probdata.domain_depth/dz)
+    num_cells_below_fault = target_num_cells - num_cells_above_fault
+    clawdata.num_cells[1] = int(target_num_cells)
+    clawdata.lower[1] = -fault_depth - num_cells_below_fault*dz
+    clawdata.upper[1] = 0.0
 
     # add absorbing layer
     target_num_cells = np.rint(probdata.abl_depth/dx)
     clawdata.lower[0] -= target_num_cells*dx
     clawdata.upper[0] += target_num_cells*dx
     clawdata.num_cells[0] += 2*int(target_num_cells)
-    target_num_cells = np.rint(probdata.abl_depth/dy)
-    clawdata.lower[1] -= target_num_cells*dy
+    target_num_cells = np.rint(probdata.abl_depth/dz)
+    clawdata.lower[1] -= target_num_cells*dz
     clawdata.num_cells[1] += int(target_num_cells)
 
     # Note adjustments in computational domain size
@@ -271,7 +278,7 @@ def setrun(claw_pkg='amrclaw'):
     clawdata.bc_lower[0] = 'extrap'   # at xlower
     clawdata.bc_upper[0] = 'extrap'   # at xupper
 
-    clawdata.bc_lower[1] = 'extrap'   # at ylower
+    clawdata.bc_lower[1] = 'extrap'   # at zlower
     clawdata.bc_upper[1] = 'user'   # at yupper
 
 
@@ -286,9 +293,9 @@ def setrun(claw_pkg='amrclaw'):
                             np.rint(probdata.domain_width/1e3))
     ngauges = len(xgauges)
 
-    # sea floor:
+    # ocean floor:
     for gaugeno,x in enumerate(xgauges):
-        gauges.append([gaugeno,x,0.5*probdata.water_scaling*dy/8.0/4.0/2.0,0,1e10])
+        gauges.append([gaugeno,x,0.5*dz/8.0/4.0/2.0,0,1e10])
 
     # water_surface:
     for gaugeno,x in enumerate(xgauges):

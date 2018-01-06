@@ -3,7 +3,7 @@ from pylab import *
 from scipy.interpolate import interp1d
 
 
-plot_profile = True
+plot_profile = False
 
 grav = 9.81
 mx = 10000   # number of grid cells
@@ -20,9 +20,9 @@ z0_shelf = -100.      # depth at x0_shelf
 z0_beach = -100.       # depth at x0_beach
 z0_shore = 0.         # depth at x0_shore
 
-## Used by sloping_fault code to define seafloor so topo matches
-def get_seafloor_parameters():
-    return x0, x0_slope, x0_shelf, x0_beach, x0_shore, x1
+## Used by sloping_fault code to define ocean floor so topo matches
+def get_oceanfloor_parameters():
+    return x0, x0_slope, x0_shelf, x0_beach, x0_shore, x1, z0_ocean, z0_shelf, z0_beach, z0_shore
 
 if x0_beach != x0_shelf:
     slope_of_shelf = (z0_beach - z0_shelf) / (x0_beach - x0_shelf)

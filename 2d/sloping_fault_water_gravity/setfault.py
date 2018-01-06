@@ -8,7 +8,7 @@ fault.subfaults = []
 
 width = 50000.0
 theta = 0.20
-fault_top_center = [0.0,-20000.0]
+fault_top_center = [-100000.0,-20000.0]
 slip = 1.0
 mu = 3e10
 rupture_time = 0.0
