@@ -97,14 +97,9 @@ def setrun(claw_pkg='amrclaw'):
     clawdata.lower[0] = fault_center-0.5*fault_width - num_cells_below_fault*dx
     clawdata.upper[0] = fault_center+0.5*fault_width + num_cells_above_fault*dx
     # z direction
-    num_cells_above_fault_below_ocean = np.rint((fault_depth+zlower_ocean)/target_dh)
-    dz = (fault_depth+zlower_ocean)/num_cells_above_fault_below_ocean
-    num_cells_ocean = np.ceil(-zlower_ocean/dz)
-    num_cells_above_fault = num_cells_above_fault_below_ocean + num_cells_ocean
-    target_num_cells = np.rint(probdata.domain_depth/dz)
-    num_cells_below_fault = target_num_cells - num_cells_above_fault
-    clawdata.num_cells[1] = int(target_num_cells)
-    clawdata.lower[1] = -fault_depth - num_cells_below_fault*dz
+    dz = -zlower_ocean
+    clawdata.num_cells[1] = int(probdata.domain_depth/dz)
+    clawdata.lower[1] = -clawdata.num_cells[1]*dz
     clawdata.upper[1] = 0.0
 
     # add absorbing layer

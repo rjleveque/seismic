@@ -34,16 +34,13 @@ def test(mfault):
     xlower_domain = fault_center-0.5*fault_width - num_cells_below_fault*dx
     xupper_domain = fault_center+0.5*fault_width + num_cells_above_fault*dx
     # z direction
-    num_cells_above_fault = np.rint(fault_depth/target_dh)
-    dz = fault_depth/num_cells_above_fault
-    target_num_cells = np.rint(probdata.domain_depth/dz)
-    num_cells_below_fault = target_num_cells - num_cells_above_fault
-    mz = int(target_num_cells)
-    zlower_domain = -fault_depth - num_cells_below_fault*dz
-    zupper_domain = -fault_depth + num_cells_above_fault*dz
+    dz = -mapping.zlower_ocean
+    mz = int(np.rint(probdata.domain_depth/dz))
+    zlower_domain = -mz*dz
+    zupper_domain = 0.0
 
-    mapping.zclower_ocean = np.floor(mapping.zlower_ocean/dz)*dz
-    print mapping.zclower_ocean
+    print probdata.domain_depth/dz
+    print mz
     print fault_depth
 
     x = linspace(xlower_domain, xupper_domain, mx+1)
@@ -72,8 +69,6 @@ class Mapping(Mapping2D):
         self.zlower_shelf, \
         self.zlower_beach, \
         self.zlower_shore = get_oceanfloor_parameters()
-        # set ocean computational depth to null
-        self.zclower_ocean = 1.0
 
     def mapc2p(self,xc,zc):
         """
@@ -83,35 +78,32 @@ class Mapping(Mapping2D):
         The variable tol ensures the physical grid also lines up with a horizontal sea floor
         """
 
-        # define grid that lines up with ocean floor
-        x_flr = xc
-        z_flr = zc*self.zlower_ocean/self.zclower_ocean
-        slope = (self.zlower_shelf - self.zlower_ocean)/(self.xlower_shelf - self.xlower_slope)
-        z_flr = where(xc > self.xlower_slope,
-            zc*(self.zlower_ocean + (xc-self.xlower_slope)*slope)/self.zclower_ocean, z_flr)
-        z_flr = where(xc > self.xlower_shelf, zc*self.zlower_shelf/self.zclower_ocean, z_flr)
 
-        # construct distance funtion in computation domain_width
-        ls_flr = self.zclower_ocean - zc
-        ls_flr = np.where(ls_flr < 0.0, 0.0, ls_flr)
+        mult = np.ones(np.shape(zc))
+        slope = (self.zlower_shelf - self.zlower_ocean)/(self.xlower_shelf - self.xlower_slope)
+        mult = where(xc > self.xlower_slope,
+            (self.zlower_ocean + (xc-self.xlower_slope)*slope)/self.zlower_ocean, mult)
+        mult = where(xc > self.xlower_shelf, self.zlower_shelf/self.zlower_ocean, mult)
+        scale = -self.fault_depth / (int(np.ceil(-self.fault_depth/self.zlower_ocean))*self.zlower_ocean)
+        mult = where(zc < self.zlower_ocean,
+            (-self.fault_depth - zc)/(-self.fault_depth-self.zlower_ocean)*mult
+            + (zc-self.zlower_ocean)/(-self.fault_depth-self.zlower_ocean)*scale, mult)
+        mult = where(zc < -self.fault_depth, scale, mult)
+        xp = xc
+        zp = zc*mult
+        print mult
 
         # define grid that is rotated to line up with fault
-        x_rot = self.xcenter + np.cos(self.theta)*(xc-self.xcenter) + np.sin(self.theta)*(zc-self.zcenter)
-        z_rot = self.zcenter - np.sin(self.theta)*(xc-self.xcenter) + np.cos(self.theta)*(zc-self.zcenter)
+        x_rot = self.xcenter + np.cos(self.theta)*(xp-self.xcenter) + np.sin(self.theta)*(zp-self.zcenter)
+        z_rot = self.zcenter - np.sin(self.theta)*(xp-self.xcenter) + np.cos(self.theta)*(zp-self.zcenter)
         # constuct function in computational domain
-        ls_rot = np.abs(zc - self.zcenter)
-        ls_rot = np.where(xc < self.xcl, np.sqrt((xc-self.xcl)**2 + (zc-self.zcenter)**2), ls_rot)
-        ls_rot = np.where(xc > self.xcr, np.sqrt((xc-self.xcr)**2 + (zc-self.zcenter)**2), ls_rot)
+        ls = np.abs(zp - self.zcenter)
+        ls = np.where(xp < self.xcl, np.sqrt((xp-self.xcl)**2 + (zp-self.zcenter)**2), ls)
+        ls = np.where(xp > self.xcr, np.sqrt((xp-self.xcr)**2 + (zp-self.zcenter)**2), ls)
 
-        # Interpolate between custom grids and cartesian grid
-        xp = xc
-        zp = zc
-        tol = self.fault_depth + self.zclower_ocean
         # Interpolate between rotated grid and current grid
-        xp = np.where(ls_rot < tol, (tol-ls_rot)/tol*x_rot + ls_rot/tol*xp, xp)
-        zp = np.where(ls_rot < tol, (tol-ls_rot)/tol*z_rot + ls_rot/tol*zp, zp)
-        # Interpolate between floor grid and current grid
-        xp = where(ls_flr < tol, (tol-ls_flr)/tol*x_flr + ls_flr/tol*xp, xp)
-        zp = where(ls_flr < tol, (tol-ls_flr)/tol*z_flr + ls_flr/tol*zp, zp)
+        tol = self.fault_depth + self.zlower_ocean
+        xp = np.where(ls < tol, (tol-ls)/tol*x_rot + ls/tol*xp, xp)
+        zp = np.where(ls < tol, (tol-ls)/tol*z_rot + ls/tol*zp, zp)
 
         return xp,zp
