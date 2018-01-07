@@ -9,7 +9,8 @@ function setplot is called to set the plot parameters.
 
 import numpy as np
 
-csig = 2e6
+csig = 1e7
+cdivcurl = 1e-4
 
 #--------------------------
 def setplot(plotdata):
@@ -146,8 +147,8 @@ def setplot(plotdata):
     plotitem = plotaxes.new_plotitem(plot_type='2d_pcolor')
     plotitem.plot_var = div
     plotitem.pcolor_cmap = colormaps.blue_white_red
-    plotitem.pcolor_cmin = -0.0005
-    plotitem.pcolor_cmax = 0.0005
+    plotitem.pcolor_cmin = -cdivcurl
+    plotitem.pcolor_cmax = cdivcurl
     plotitem.add_colorbar = False
     plotitem.amr_celledges_show = [False]
     plotitem.amr_patchedges_show = [0]
@@ -166,8 +167,8 @@ def setplot(plotdata):
     plotitem = plotaxes.new_plotitem(plot_type='2d_pcolor')
     plotitem.plot_var = curl
     plotitem.pcolor_cmap = colormaps.blue_white_red
-    plotitem.pcolor_cmin = -0.0005
-    plotitem.pcolor_cmax = 0.0005
+    plotitem.pcolor_cmin = -cdivcurl
+    plotitem.pcolor_cmax = cdivcurl
     plotitem.add_colorbar = True
     plotitem.colorbar_shrink = 0.7
     plotitem.amr_celledges_show = [False]

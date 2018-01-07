@@ -86,6 +86,11 @@ c ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::;
       
       real*8 s, xcell
       real*8 t0wall,pi2,amplitude 
+      real*8  x, p_atm, p_water, h_top, p_ambient, dist
+      real*8  t_moving_bottom, x1, pi, ampl
+      real*8  rho,bulk,cc,zz,g
+      real*8  tfactor, zfinal, width
+
       ! needed for stress at top boundary:
       common /combc/ t0wall,pi2,amplitude
 
@@ -214,12 +219,7 @@ c
       go to (300,310,320,330) mthbc(3)+1
 c
   300 continue
-c     # force applied to bottom surface with sig22 = s
-      if (time.lt.t0wall) then
-          s = amplitude*(1.d0 - cos(pi2*time/t0wall)) / 2.d0
-        else
-          s = 0.d0
-        endif
+c     # velocity applied to bottom surface with v=s
 
 c     # zero-order extrapolation:
       do 305 j=1,nyb
@@ -228,22 +228,27 @@ c     # zero-order extrapolation:
                 val(m,i,j) = val(m,i,nyb+1)
   305       continue
 
-c     # adjust the stress:
-      if (time.lt.t0wall) then
+c     # set the normal velocity:
+      t_moving_bottom = 10.d0
+      zfinal = 10.d0 ! final displacement of bottom
+      width = 5.d3 ! gaussian parameter
+      pi = 4.d0*atan(1.d0)
+      tfactor = pi/(2.d0*t_moving_bottom)
+     &                  * sin(pi*time/t_moving_bottom)
+
       do 306 j=1,nyb
          do 306 i=1,nrow
-            xcell = xlo_patch + (i-0.5d0)*hx
-            if (xcell.gt.-4d3 .and. xcell.lt.4d3) then
-c               # portion of boundary where stress sig22 is applied:
-                val(2,i,j) = 2.d0*s -val(2,i,nyb+1)
-                val(3,i,j) = - val(3,i,nyb+1)
+            x = xlo_patch + (i-0.5d0)*hx
+            !if ((time < t_moving_bottom) .and. (x<x1)) then
+            if (time < t_moving_bottom) then
+                  s = zfinal * exp(-(x/width)**2)
+                  s = s * tfactor
               else
-c               # no-stress portion of boundary:
-                val(3,i,j) = -val(3,i,nyb+1)
-                val(2,i,j) = -val(2,i,nyb+1)
+                  s = 0.d0
               endif
+            val(5,i,j) = 2.d0*s - val(5,i,j)   ! v-velocity
+            val(4,i,j) = -val(4,i,j)           ! u-velocity
   306    continue
-       endif
       go to 399
 c
   310 continue

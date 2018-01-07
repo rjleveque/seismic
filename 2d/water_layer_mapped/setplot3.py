@@ -11,7 +11,7 @@ import numpy as np
 from mapc2p import mapc2p
 import os
 
-csig = 2e6
+csig = 1e7
 cv = 0.5 
 
 outdir2 = os.path.abspath('../water_layer_averaged/_output')
