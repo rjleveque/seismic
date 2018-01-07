@@ -29,17 +29,19 @@ c
 
           aux(1,i,j) = w1*rho1 + w2*rho2
           !aux(2,i,j) = w1*alam1 + w2*alam2
-          !aux(3,i,j) = w1*amu1 + w2*amu2
           aux(2,i,j) = 1.d0/(w1/alam1 + w2/alam2)
-          if (amu1*amu2 > 0.d0) then
-              aux(3,i,j) = 1.d0/(w1/amu1 + w2/amu2)
-            else if (w1==0.d0) then
-              aux(3,i,j) = amu2
-            else if (w2==0.d0) then
-              aux(3,i,j) = amu1
-            else 
-              aux(3,i,j) = 0.d0
-            endif
+          aux(3,i,j) = w1*amu1 + w2*amu2
+
+!         if (amu1*amu2 > 0.d0) then
+!             aux(3,i,j) = 1.d0/(w1/amu1 + w2/amu2)
+!           else if (w1==0.d0) then
+!             aux(3,i,j) = amu2
+!           else if (w2==0.d0) then
+!             aux(3,i,j) = amu1
+!           else 
+!             aux(3,i,j) = 0.d0
+!           endif
+
           !bulk1      = alam1 + 2.d0*amu1
           !bulk2      = alam2 + 2.d0*amu2
           !bulk       = 1.d0/(w1/bulk1 + w2/bulk2)
