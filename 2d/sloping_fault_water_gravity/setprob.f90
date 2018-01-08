@@ -2,7 +2,7 @@
     subroutine setprob
 !   ==================
 
-    use fault_module, only: load_fault
+    use fault_module, only: load_fault, center
 
     implicit none
 
@@ -15,8 +15,8 @@
     real(kind=8) :: lambda_plate, mu_plate, rho_plate, lambda_water, mu_water, rho_water, g
     common /material/ lambda_plate, mu_plate, rho_plate, lambda_water, mu_water, rho_water, g
 
-    real(kind=8) :: scaling
-    common /water/  scaling
+    real(kind=8) :: zlower_ocean, xlower_slope, xlower_shelf, zlower_shelf. scale
+    common /topography/ zlower_ocean, xlower_slope, xlower_shelf, zlower_shelf, scale
 
     real(kind=8) :: xlower, xupper, ylower
 !
@@ -31,7 +31,13 @@
 !     # comment lines starting with #:
     call opendatafile(iunit, fname)
 
-    read(iunit,*) scaling
+    read(iunit,*) zlower_ocean
+    read(iunit,*) xlower_slope
+    read(iunit,*) xlower_shelf
+    read(iunit,*) zlower_shelf
+    read(iunit,*) ABLdepth ! xlower_beach
+    read(iunit,*) ABLdepth ! xlower_shore
+    read(iunit,*) ABLdepth ! zlower_shore
     read(iunit,*) ABLdepth
     close(iunit)
 
@@ -51,6 +57,10 @@
     ABLxpos(1) = xlower + ABLdepth
     ABLxpos(2) = xupper - ABLdepth
     ABLypos = ylower + ABLdepth
+
+!    # Compute vertical scale of grids aligned to fault depth versus to ocean
+!      floor
+    scale = center(2) / (ceiling(center(2)/zlower_ocean)*zlower_ocean)
 
 !   # Set material parameters
     lambda_plate = 60.d9  ! Pa

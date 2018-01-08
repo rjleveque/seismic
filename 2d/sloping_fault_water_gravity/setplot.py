@@ -29,22 +29,22 @@ def setplot(plotdata):
     probdata = ClawData()
     probdata.read(plotdata.outdir + '/setprob.data',force=True)
 
-    mapping = Mapping(fault, probdata.water_scaling)
+    mapping = Mapping(fault, probdata)
     fault_width = mapping.fault_width
     xcenter = mapping.xcenter
-    ycenter = mapping.ycenter
+    zcenter = mapping.zcenter
     xp1 = mapping.xp1
     xp2 = mapping.xp2
-    yp1 = mapping.yp1
-    yp2 = mapping.yp2
+    zp1 = mapping.zp1
+    zp2 = mapping.zp2
 
-    xlimits = [xcenter-0.5*probdata.domain_width,xcenter+0.5*probdata.domain_width]
-    ylimits = [-probdata.domain_depth,probdata.water_depth]
-    xlimitsW = [xp1-10.0*probdata.water_depth,xp2+10.0*probdata.water_depth]
-    ylimitsW = [-5.0*probdata.water_depth,probdata.water_depth]
+    xlimits = [xcenter-0.5*probdata.domain_width, xcenter+0.5*probdata.domain_width]
+    zlimits = [-probdata.domain_depth, 0.0]
+    xlimitsW = [xp1+10.0*probdata.zlower_ocean,xp2-10.0*probdata.zlower_ocean]
+    zlimitsW = [5.0*probdata.zlower_ocean, 0.0]
     abl_depth = probdata.abl_depth
     xlimits_trunc = [xlimits[0]+abl_depth, xlimits[1]-abl_depth]
-    ylimits_trunc = [ylimits[0]+abl_depth, ylimits[1]]
+    zlimits_trunc = [zlimits[0]+abl_depth, zlimits[1]]
 
     from clawpack.visclaw import colormaps
 
@@ -55,7 +55,7 @@ def setplot(plotdata):
     def plot_interfaces(current_data):
         from pylab import linspace, plot
         xl = linspace(xp1,xp2,100)
-        yl = linspace(yp1,yp2,100)
+        yl = linspace(zp1,zp2,100)
         plot(xl,yl,'g')
         xl = linspace(xlimits[0],xlimits[1],1000)
         plot(xl,0.0*xl,'b')
@@ -69,9 +69,9 @@ def setplot(plotdata):
     def slip_direction_vel(current_data):
         # return vel dot tau, where tau is tangent to fault
         tau_x = (xp2 - xp1)/fault_width
-        tau_y = (yp2 - yp1)/fault_width
-        tau_x = np.where(current_data.y > ycenter, -tau_x, tau_x)
-        tau_y = np.where(current_data.y > ycenter, -tau_y, tau_y)
+        tau_y = (zp2 - zp1)/fault_width
+        tau_x = np.where(current_data.y > zcenter, -tau_x, tau_x)
+        tau_y = np.where(current_data.y > zcenter, -tau_y, tau_y)
         u = current_data.q[3,:,:]
         v = current_data.q[4,:,:]
         return u*tau_x + v*tau_y
@@ -84,7 +84,7 @@ def setplot(plotdata):
     plotaxes = plotfigure.new_plotaxes()
     plotaxes.axescmd = 'subplot(211)'
     plotaxes.xlimits = xlimits
-    plotaxes.ylimits = ylimits
+    plotaxes.ylimits = zlimits
     plotaxes.title = '-trace(sigma)'
     plotaxes.scaled = True
     plotaxes.afteraxes = plot_interfaces
@@ -105,7 +105,7 @@ def setplot(plotdata):
     plotaxes = plotfigure.new_plotaxes()
     plotaxes.axescmd = 'subplot(212)'
     plotaxes.xlimits = xlimits
-    plotaxes.ylimits = ylimits
+    plotaxes.ylimits = zlimits
     plotaxes.title = 'slip-direction-velocity'
     plotaxes.scaled = True
     plotaxes.afteraxes = plot_interfaces
@@ -117,7 +117,7 @@ def setplot(plotdata):
     plotitem.pcolor_cmin = -0.1
     plotitem.pcolor_cmax = 0.1
     plotitem.add_colorbar = True
-    plotitem.amr_celledges_show = [0]
+    plotitem.amr_celledges_show = [1]
     plotitem.amr_patchedges_show = [0]
     plotitem.MappedGrid = True
     plotitem.mapc2p = mapping.mapc2p
@@ -129,7 +129,7 @@ def setplot(plotdata):
     plotaxes = plotfigure.new_plotaxes()
     plotaxes.axescmd = 'subplot(211)'
     plotaxes.xlimits = xlimitsW
-    plotaxes.ylimits = ylimitsW
+    plotaxes.ylimits = zlimitsW
     plotaxes.title = '-trace(sigma)'
     plotaxes.scaled = True
     plotaxes.afteraxes = plot_interfaces
@@ -151,7 +151,7 @@ def setplot(plotdata):
     plotaxes = plotfigure.new_plotaxes()
     plotaxes.axescmd = 'subplot(212)'
     plotaxes.xlimits = xlimitsW
-    plotaxes.ylimits = ylimitsW
+    plotaxes.ylimits = zlimitsW
     plotaxes.title = 'slip-direction-velocity'
     plotaxes.scaled = True
     plotaxes.afteraxes = plot_interfaces
@@ -175,7 +175,7 @@ def setplot(plotdata):
     # Set up for axes in this figure:
     plotaxes = plotfigure.new_plotaxes()
     plotaxes.xlimits = xlimits
-    plotaxes.ylimits = ylimits
+    plotaxes.ylimits = zlimits
     plotaxes.title = 'Level 4 grid patches'
     plotaxes.scaled = True
     plotaxes.afteraxes = plot_interfaces

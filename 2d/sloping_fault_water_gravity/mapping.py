@@ -10,11 +10,10 @@ def test(mfault):
 
     probdata = ClawData()
     probdata.read('setprob.data',force=True)
-    sink_depth = probdata.sink_depth
-
     fault = dtopotools.Fault()
     fault.read('fault.data')
-    mapping = Mapping(fault, sink_depth)
+    mapping = Mapping(fault, probdata)
+
     zlower_ocean = mapping.zlower_ocean
     fault_center = mapping.xcenter
     fault_depth = mapping.fault_depth
@@ -39,10 +38,6 @@ def test(mfault):
     zlower_domain = -mz*dz
     zupper_domain = 0.0
 
-    print probdata.domain_depth/dz
-    print mz
-    print fault_depth
-
     x = linspace(xlower_domain, xupper_domain, mx+1)
     z = linspace(zlower_domain, zupper_domain, mz+1)
     xc,zc = meshgrid(x,z)
@@ -56,19 +51,16 @@ def test(mfault):
 
 class Mapping(Mapping2D):
 
-    def __init__(self, fault, sink_depth):
+    def __init__(self, fault, probdata):
         super(Mapping,self).__init__(fault)
-        # Obtain topography parameters to match 1D Geoclaw
-        self.xlower_domain, \
-        self.xlower_slope, \
-        self.xlower_shelf, \
-        self.xlower_beach, \
-        self.xlower_shore, \
-        self.xupper_domain, \
-        self.zlower_ocean, \
-        self.zlower_shelf, \
-        self.zlower_beach, \
-        self.zlower_shore = get_oceanfloor_parameters()
+        # Obtain topography parameters
+        self.xlower_slope = probdata.xlower_slope
+        self.xlower_shelf = probdata.xlower_shelf
+        self.xlower_beach = probdata.xlower_beach
+        self.xlower_shore = probdata.xlower_shore
+        self.zlower_ocean = probdata.zlower_ocean
+        self.zlower_shelf = probdata.zlower_shelf
+        self.zlower_shore = probdata.zlower_shore
 
     def mapc2p(self,xc,zc):
         """
@@ -96,7 +88,7 @@ class Mapping(Mapping2D):
         # define grid that is rotated to line up with fault
         x_rot = self.xcenter + np.cos(self.theta)*(xp-self.xcenter) + np.sin(self.theta)*(zp-self.zcenter)
         z_rot = self.zcenter - np.sin(self.theta)*(xp-self.xcenter) + np.cos(self.theta)*(zp-self.zcenter)
-        # constuct function in computational domain
+        # construct level set function in computational domain
         ls = np.abs(zp - self.zcenter)
         ls = np.where(xp < self.xcl, np.sqrt((xp-self.xcl)**2 + (zp-self.zcenter)**2), ls)
         ls = np.where(xp > self.xcr, np.sqrt((xp-self.xcr)**2 + (zp-self.zcenter)**2), ls)

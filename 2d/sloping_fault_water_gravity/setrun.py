@@ -13,6 +13,7 @@ reload(dtopotools)
 from clawpack.seismic.mappings import Mapping2D
 from make_topo_and_grid import get_oceanfloor_parameters
 
+USE_TOPO = False
 
 #------------------------------
 def setrun(claw_pkg='amrclaw'):
@@ -36,22 +37,40 @@ def setrun(claw_pkg='amrclaw'):
     num_dim = 2
     rundata = data.ClawRunData(claw_pkg, num_dim)
 
-    # Obtain topography parameters to match 1D Geoclaw
-    xlower_domain, xlower_slope, xlower_shelf, xlower_beach, xlower_shore, xupper_domain, \
-      zlower_ocean, zlower_shelf, zlower_beach, zlower_shore = get_oceanfloor_parameters()
+    if (USE_TOPO):
+        # Obtain topography parameters to match 1D Geoclaw
+        xlower_domain, xlower_slope, xlower_shelf, xlower_beach, xlower_shore, xupper_domain, \
+          zlower_ocean, zlower_shelf, zlower_beach, zlower_shore = get_oceanfloor_parameters()
+    else:
+        xlower_domain = -150e3
+        xlower_slope = -65e3
+        xlower_shelf = -45e3
+        xlower_beach = -5e3
+        xlower_shore = 0.0
+        xupper_domain = 2e3
+        zlower_ocean = -3000.0
+        zlower_shelf = -3000.0
+        zlower_shore = -3000.0
+
 
     # Adjust topo parameters to remove shore
     xupper_domain = xlower_shore
+    zlower_shore = min(zlower_shore, -100.0)
 
     #------------------------------------------------------------------
     # Problem-specific parameters to be written to setprob.data:
     #------------------------------------------------------------------
     probdata = rundata.new_UserData(name='probdata',fname='setprob.data')
-    probdata.add_param('water_scaling', 0, 'ratio automatically set for mapping')
+    probdata.add_param('zlower_ocean', zlower_ocean, 'z-coord of ocean floor')
+    probdata.add_param('xlower_slope', xlower_slope, 'x-coord of beginning of slope')
+    probdata.add_param('xlower_shelf', xlower_shelf, 'x-coord of beginning of shelf')
+    probdata.add_param('zlower_shelf', zlower_shelf, 'z-coord of shelf')
+    probdata.add_param('xlower_beach', xlower_beach, 'x-coord of beginning of beach')
+    probdata.add_param('xlower_shore', xlower_shore, 'x-coord of beginning of shore')
+    probdata.add_param('zlower_shore', zlower_shore, 'z-coord of shore')
     probdata.add_param('abl_depth', 30e3, 'depth of absorbing layer')
     probdata.add_param('domain_depth', 50e3, 'depth of domain')
     probdata.add_param('domain_width', xupper_domain-xlower_domain, 'width of domain')
-    probdata.add_param('sink_depth', 100.0, 'depth the shore is sunk to')
 
     #------------------------------------------------------------------
     # Read in fault information
@@ -154,7 +173,7 @@ def setrun(claw_pkg='amrclaw'):
     # Specify at what times the results should be written to fort.q files.
     # Note that the time integration stops after the final output time.
 
-    clawdata.output_style = 1
+    clawdata.output_style = 2
 
     if clawdata.output_style==1:
         # Output ntimes frames at equally spaced times up to tfinal:
@@ -166,8 +185,7 @@ def setrun(claw_pkg='amrclaw'):
     elif clawdata.output_style == 2:
         # Specify a list or numpy array of output times:
         # Include t0 if you want output at the initial time.
-        clawdata.output_times =  list(np.linspace(0,5,11)) + \
-            range(6,61)
+        clawdata.output_times =  list(np.linspace(0,10,11))
 
     elif clawdata.output_style == 3:
         # Output every step_interval timesteps over total_steps timesteps:
@@ -204,7 +222,7 @@ def setrun(claw_pkg='amrclaw'):
 
     # Initial time step for variable dt.
     # (If dt_variable==0 then dt=dt_initial for all steps)
-    clawdata.dt_initial = 0.1
+    clawdata.dt_initial = 0.01
 
     # Max time step to be allowed if variable dt used:
     clawdata.dt_max = 1.000000e+99
@@ -290,11 +308,11 @@ def setrun(claw_pkg='amrclaw'):
 
     # ocean floor:
     for gaugeno,x in enumerate(xgauges):
-        gauges.append([gaugeno,x,0.5*dz/8.0/4.0/2.0,0,1e10])
+        gauges.append([gaugeno,x,zlower_ocean + 0.5*dz/8.0/4.0/2.0,0,1e10])
 
-    # water_surface:
+    # ocean surface:
     for gaugeno,x in enumerate(xgauges):
-        gauges.append([ngauges+gaugeno,x,clawdata.upper[1]-1,0,1e10])
+        gauges.append([ngauges+gaugeno,x,-1.0,0,1e10])
 
     # --------------
     # Checkpointing:
