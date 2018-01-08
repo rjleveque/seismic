@@ -5,6 +5,7 @@ module fault_module
     integer :: nsubfaults, nevents
     type subfault
       real(kind=8) :: width, depth, slip, longitude, rupture_time, rise_time
+      real(kind=8) :: xcb(2)
     end type subfault
     type(subfault), allocatable :: subfaults(:)
     real(kind=8), allocatable :: event_times(:)
@@ -58,6 +59,7 @@ contains
             yp2 = -subfaults(i)%depth - dsin(theta)*subfaults(i)%width
           end if
         end do
+        close(7)
 
         ! Remove trivial event times
         nevents = 2*nsubfaults
@@ -111,7 +113,16 @@ contains
         xcb(1) = center(1) - 0.5d0*total_width
         xcb(2) = center(1) + 0.5d0*total_width
 
-        close(7)
+        ! Determine subfault location in computational domain
+        print *, "*******WARNING*******"
+        print *, "Subfaults are assumed to be specified in top-center coords"
+        print *, "*********************"
+        do i=1,nsubfaults
+          subfaults(i)%xcb(1) = xcb(1) + dsqrt( &
+                (subfaults(i)%longitude*LAT2METER - xp1)**2 + &
+                (-subfaults(i)%depth - yp1)**2 )
+          subfaults(i)%xcb(2) = subfaults(i)%xcb(1) + subfaults(i)%width
+        end do
 
     end subroutine load_fault
 
