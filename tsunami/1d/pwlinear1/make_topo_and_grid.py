@@ -13,7 +13,7 @@ x0_slope = -65e3      # start of slope
 x0_shelf = -45e3      # start of shelf
 x0_beach = -5e3       # start of beach
 x0_shore = 0.         # initial shoreline
-x1 = x0_shore + 2e3   # right boundary
+x1 = x0_shore         # right boundary
 
 z0_ocean = -4500.     # depth of ocean
 z0_shelf = -200.      # depth at x0_shelf
