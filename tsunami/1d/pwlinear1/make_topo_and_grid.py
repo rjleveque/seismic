@@ -15,10 +15,10 @@ x0_beach = -5e3       # start of beach
 x0_shore = 0.         # initial shoreline
 x1 = x0_shore + 2e3   # right boundary
 
-z0_ocean = -3000.     # depth of ocean
-z0_shelf = -100.      # depth at x0_shelf
-z0_beach = -100.       # depth at x0_beach
-z0_shore = 0.         # depth at x0_shore
+z0_ocean = -4000.     # depth of ocean
+z0_shelf = -200.      # depth at x0_shelf
+z0_beach = -200.       # depth at x0_beach
+z0_shore = -200.         # depth at x0_shore
 
 ## Used by sloping_fault code to define ocean floor so topo matches
 def get_oceanfloor_parameters():
