@@ -47,6 +47,7 @@ subroutine setaux(mbc,mx,my,xlower,ylower,dx,dy,maux,aux)
       do j=1-mbc,my + mbc
         ycell = ylower + (j-0.5d0)*dy
         do i=1-mbc,mx + mbc
+          xcell = xlower + (i-0.5d0)*dx
 
           if (ycell .gt. 0.d0) then
             lambda_cell = lambda_water
