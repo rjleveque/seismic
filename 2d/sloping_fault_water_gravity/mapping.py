@@ -23,15 +23,15 @@ def test(mfault):
     # additional comments can be found there
     xupper_domain = mapping.xlower_shore
     # determine cell number and set computational boundaries
-    target_dh = fault_width/mfault
+    dx = fault_width/mfault
     # x direction
-    num_cells_above_fault = np.rint((xupper_domain - (fault_center+0.5*fault_width))/target_dh)
-    dx = (xupper_domain - (fault_center+0.5*fault_width))/num_cells_above_fault
+    num_cells_above_fault = np.ceil((xupper_domain - (fault_center+0.5*fault_width))/dx)
     target_num_cells = np.rint(probdata.domain_width/dx)
     num_cells_below_fault = target_num_cells - num_cells_above_fault - mfault
     mx = int(target_num_cells)
     xlower_domain = fault_center-0.5*fault_width - num_cells_below_fault*dx
     xupper_domain = fault_center+0.5*fault_width + num_cells_above_fault*dx
+
     # z direction
     dz = -mapping.zlower_ocean
     mz = int(np.rint(probdata.domain_depth/dz))
@@ -52,15 +52,7 @@ def test(mfault):
 class Mapping(Mapping2D):
 
     def __init__(self, fault, probdata):
-        super(Mapping,self).__init__(fault)
-        # Obtain topography parameters
-        self.xlower_slope = probdata.xlower_slope
-        self.xlower_shelf = probdata.xlower_shelf
-        self.xlower_beach = probdata.xlower_beach
-        self.xlower_shore = probdata.xlower_shore
-        self.zlower_ocean = probdata.zlower_ocean
-        self.zlower_shelf = probdata.zlower_shelf
-        self.zlower_shore = probdata.zlower_shore
+        super(Mapping,self).__init__(fault, probdata)
 
     def mapc2p(self,xc,zc):
         """
@@ -70,32 +62,32 @@ class Mapping(Mapping2D):
         The variable tol ensures the physical grid also lines up with a horizontal sea floor
         """
 
-
         mult = np.ones(np.shape(zc))
         slope = (self.zlower_shelf - self.zlower_ocean)/(self.xlower_shelf - self.xlower_slope)
         mult = where(xc > self.xlower_slope,
             (self.zlower_ocean + (xc-self.xlower_slope)*slope)/self.zlower_ocean, mult)
         mult = where(xc > self.xlower_shelf, self.zlower_shelf/self.zlower_ocean, mult)
-        scale = -self.fault_depth / (int(np.ceil(-self.fault_depth/self.zlower_ocean))*self.zlower_ocean)
         mult = where(zc < self.zlower_ocean,
             (-self.fault_depth - zc)/(-self.fault_depth-self.zlower_ocean)*mult
-            + (zc-self.zlower_ocean)/(-self.fault_depth-self.zlower_ocean)*scale, mult)
-        mult = where(zc < -self.fault_depth, scale, mult)
+            + (zc-self.zlower_ocean)/(-self.fault_depth-self.zlower_ocean)*self.factor, mult)
+        mult = where(zc < -self.fault_depth, self.factor, mult)
         xp = xc
         zp = zc*mult
-        print mult
 
         # define grid that is rotated to line up with fault
         x_rot = self.xcenter + np.cos(self.theta)*(xp-self.xcenter) + np.sin(self.theta)*(zp-self.zcenter)
         z_rot = self.zcenter - np.sin(self.theta)*(xp-self.xcenter) + np.cos(self.theta)*(zp-self.zcenter)
         # construct level set function in computational domain
+        tol = self.fault_depth + self.zlower_ocean
         ls = np.abs(zp - self.zcenter)
         ls = np.where(xp < self.xcl, np.sqrt((xp-self.xcl)**2 + (zp-self.zcenter)**2), ls)
         ls = np.where(xp > self.xcr, np.sqrt((xp-self.xcr)**2 + (zp-self.zcenter)**2), ls)
+        ls += self.zlower_ocean
 
-        # Interpolate between rotated grid and current grid
-        tol = self.fault_depth + self.zlower_ocean
+        # interpolate between grids
         xp = np.where(ls < tol, (tol-ls)/tol*x_rot + ls/tol*xp, xp)
         zp = np.where(ls < tol, (tol-ls)/tol*z_rot + ls/tol*zp, zp)
+        xp = np.where(ls < 0.0, x_rot, xp)
+        zp = np.where(ls < 0.0, z_rot, zp)
 
         return xp,zp
