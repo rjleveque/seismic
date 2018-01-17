@@ -62,14 +62,14 @@ def setrun(claw_pkg='amrclaw'):
     clawdata.num_dim = num_dim
     
     # Lower and upper edge of computational domain:
-    clawdata.lower[0] = -100e3       # xlower
-    clawdata.upper[0] = 100e3        # xupper
+    clawdata.lower[0] = -200e3       # xlower
+    clawdata.upper[0] = 200e3        # xupper
     clawdata.lower[1] = -4500.      # ylower
     clawdata.upper[1] = 0.0          # yupper
     
     # Number of grid cells:
     clawdata.num_cells[0] = 200      # mx
-    clawdata.num_cells[1] =   9     # my
+    clawdata.num_cells[1] =   5     # my
     
 
     # ---------------
@@ -117,7 +117,7 @@ def setrun(claw_pkg='amrclaw'):
         # Output ntimes frames at equally spaced times up to tfinal:
         # Can specify num_output_times = 0 for no output
         clawdata.num_output_times = 50
-        clawdata.tfinal = 400.
+        clawdata.tfinal = 1000.
         clawdata.output_t0 = True  # output at initial (or restart) time?
         
     elif clawdata.output_style == 2:
@@ -240,12 +240,10 @@ def setrun(claw_pkg='amrclaw'):
     # ---------------
     gauges = rundata.gaugedata.gauges 
     # for gauges append lines of the form  [gaugeno, x, y, t1, t2]
-    yy = [-19843.75, -19375., -18906.25]
-    for gaugeno,x in enumerate(np.linspace(-10e3,10e3,3)):
-        gauges.append([gaugeno,x,-1,0,1e10])
-        #gauges.append([100+gaugeno,x,yy[gaugeno],0,1e10])
-        #gauges.append([200+gaugeno,x,-39990,0,1e10])
-        gauges.append([300+gaugeno,x,-3999,0,1e10])
+    xgauge = np.linspace(0,150e3,7)
+    for gaugeno,x in enumerate(xgauge):
+        gauges.append([100+gaugeno,x,-1,0,1e10])
+        gauges.append([200+gaugeno,x,-3999,0,1e10])
 
                   
     # --------------
@@ -287,8 +285,8 @@ def setrun(claw_pkg='amrclaw'):
     # List of refinement ratios at each level (length at least
     # amr_level_max-1)
     amrdata.refinement_ratios_x = [4,2]
-    amrdata.refinement_ratios_y = [4,2]
-    amrdata.refinement_ratios_t = [4,2]
+    amrdata.refinement_ratios_y = [4,4]
+    amrdata.refinement_ratios_t = [4,4]
 
 
     # Specify type of each aux variable in amrdata.auxtype.
@@ -332,11 +330,11 @@ def setrun(claw_pkg='amrclaw'):
     regions = rundata.regiondata.regions 
     # to specify regions of refinement append lines of the form
     #  [minlevel,maxlevel,t1,t2,x1,x2,y1,y2]
-    regions.append([1,1,0,1e9,-100e3,100e3,-50e3,0])  # whole domain, all time
-    regions.append([1,3,0,20,-100e3,100e3,-50e3,0])  # whole domain, limited time
-    regions.append([2,3,0,1e9,-100e3,100e3,-11e3,0])  # water layer, all time
-    regions.append([3,4,0,1e9,-100e3,100e3,-1000,0])  # top boundary
-    regions.append([3,4,0,5,-100e3,100e3,-4500,-4000]) #bottom boundary
+    regions.append([1,1,0,1e9,-1e9,1e9,-50e3,0])  # whole domain, all time
+    #regions.append([1,3,0,50,-1e9,1e9,-50e3,0])  # whole domain, limited time
+    regions.append([1,2,0,1e9,-1e9,1e9,-11e3,0])  # water layer, all time
+    regions.append([2,3,0,1e9,-1e9,1e9,-200,0])  # top boundary
+    regions.append([2,3,0,5,-1e9,1e9,-4500,-4300]) #bottom boundary
 
 
 

@@ -12,8 +12,13 @@ import numpy as np
 csig = 10
 cdivcurl = 1e-5
 
-rhog = 1025*9.81
-ybot = -4000.
+h0 = 4500.  # ocean depth
+cw = 1500.  # speed of sound in water
+g = 9.81
+rho = 1025. # density of water
+rhog = rho*g
+period = 4 * h0 / cw # time for signal transit depth 4 times
+ybot = -h0
 
 #--------------------------
 def setplot(plotdata):
@@ -238,7 +243,7 @@ def setplot(plotdata):
             surf_max = max(surf_max,eta_slice.max())
         except:
             pass
-        if current_data.level < 3:
+        if current_data.level != 2:
             eta_slice *= nan
         return x_slice, eta_slice
 
@@ -263,7 +268,7 @@ def setplot(plotdata):
 
         # bottom displacement:
         delta_slice = ravel(q[5,:,:])[ij]
-        if current_data.level < 3:
+        if current_data.level != 2:
             delta_slice *= nan
         return x_slice, delta_slice
 
@@ -289,7 +294,7 @@ def setplot(plotdata):
         # bottom pressure in units of meters of water, corrected for delta:
         p_slice = -(ravel(q[0,:,:])[ij] + ravel(q[1,:,:])[ij]) / (2*rhog) \
                     - ravel(q[5,:,:])[ij]
-        if current_data.level < 3:
+        if current_data.level != 2:
             p_slice *= nan
         return x_slice, p_slice
 
@@ -324,11 +329,17 @@ def setplot(plotdata):
                     type='each_gauge')
     #plotfigure.clf_each_gauge = False
 
+    def aa_gauge(current_data):
+        from pylab import grid, tight_layout
+        grid(True)
+        tight_layout()
+
     # Set up for axes in this figure:
     plotaxes = plotfigure.new_plotaxes()
     plotaxes.axescmd = 'subplot(2,1,1)'
     plotaxes.ylimits = 'auto'
     plotaxes.title = 'Horizontal velocity'
+    plotaxes.afteraxes = aa_gauge
 
     # Plot surface as blue curve:
     plotitem = plotaxes.new_plotitem(plot_type='1d_plot')
@@ -339,6 +350,7 @@ def setplot(plotdata):
     plotaxes.axescmd = 'subplot(2,1,2)'
     plotaxes.ylimits = 'auto'
     plotaxes.title = 'Vertical velocity'
+    plotaxes.afteraxes = aa_gauge
 
     # Plot surface as blue curve:
     plotitem = plotaxes.new_plotitem(plot_type='1d_plot')
@@ -350,25 +362,68 @@ def setplot(plotdata):
                     type='each_gauge')
     #plotfigure.clf_each_gauge = False
 
+    def pressure_diff(current_data):
+        q = current_data.q
+        p = (q[0,:]+q[1,:]) / (2*rhog)
+        delta = q[5,:]
+        return p - delta
+
+    def filtered_pressure_diff(current_data):
+        from pylab import find,len,sum,zeros,hstack
+        q = current_data.q
+        import pdb; pdb.set_trace()
+        p = (q[0,:]+q[1,:]) / (2*rhog)
+        delta = q[5,:]
+        d = p - delta
+        t = q.t
+        fpd = []
+        for k1 in range(len(t)):
+            t1 = t[k1]
+            try:
+                k2 = find(t > t1+period).min()
+            except:
+                break
+            if k1==0:
+                kmid = int((k1+k2)/2.)
+            fpd.append(sum(d[k1:k2])/(k2-k1+1))
+        fpd = hstack((zeros(kmid),fpd))
+        kz = len(t) - len(fpd)
+        if kz>0:
+            fpd = hstack((fpd,zeros(kz)))
+        return fpd
+
     # Set up for axes in this figure:
     plotaxes = plotfigure.new_plotaxes()
     plotaxes.axescmd = 'subplot(2,1,1)'
     plotaxes.ylimits = 'auto'
-    plotaxes.title = 'sigma11'
+    plotaxes.title = 'pressure difference'
+    plotaxes.afteraxes = aa_gauge
 
-    # Plot surface as blue curve:
     plotitem = plotaxes.new_plotitem(plot_type='1d_plot')
-    plotitem.plot_var = 1
+    plotitem.plot_var = pressure_diff
     plotitem.plotstyle = 'b-'
+
+    plotitem = plotaxes.new_plotitem(plot_type='1d_plot')
+    plotitem.show = False
+    plotitem.plot_var = filtered_pressure_diff
+    plotitem.plotstyle = 'k-'
+
+
+
+    def displacement(current_data):
+        q = current_data.q
+        delta = q[5,:]
+        return delta
 
     plotaxes = plotfigure.new_plotaxes()
     plotaxes.axescmd = 'subplot(2,1,2)'
     plotaxes.ylimits = 'auto'
-    plotaxes.title = 'sigma22'
+    plotaxes.title = 'displacement'
+    plotaxes.afteraxes = aa_gauge
 
     # Plot surface as blue curve:
     plotitem = plotaxes.new_plotitem(plot_type='1d_plot')
-    plotitem.plot_var = 2
+    plotitem.plot_var = displacement
     plotitem.plotstyle = 'b-'
 
 

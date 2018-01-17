@@ -231,9 +231,9 @@ c     # zero-order extrapolation:
   305       continue
 
 c     # set the normal velocity:
-      t_moving_bottom = 50.d0
+      t_moving_bottom = 200.d0
       zfinal = 10.d0 ! final displacement of bottom
-      width = 5.d3 ! gaussian parameter
+      width = 15.d3 ! gaussian parameter
       pi = 4.d0*atan(1.d0)
       tfactor = pi/(2.d0*t_moving_bottom)
      &                  * sin(pi*time/t_moving_bottom)
