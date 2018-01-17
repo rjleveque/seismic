@@ -76,7 +76,7 @@ def setrun(claw_pkg='amrclaw'):
     # ---------------
 
     # Number of equations in the system:
-    clawdata.num_eqn = 5
+    clawdata.num_eqn = 6   # includes displacement delta 
 
     # Number of auxiliary variables in the aux array (initialized in setaux)
     clawdata.num_aux = 13
@@ -115,8 +115,8 @@ def setrun(claw_pkg='amrclaw'):
     if clawdata.output_style==1:
         # Output ntimes frames at equally spaced times up to tfinal:
         # Can specify num_output_times = 0 for no output
-        clawdata.num_output_times = 40
-        clawdata.tfinal = 20.
+        clawdata.num_output_times = 50
+        clawdata.tfinal = 100.
         clawdata.output_t0 = True  # output at initial (or restart) time?
         
     elif clawdata.output_style == 2:
@@ -209,7 +209,7 @@ def setrun(claw_pkg='amrclaw'):
     #   src_split == 0 or 'none'    ==> no source term (src routine never called)
     #   src_split == 1 or 'godunov' ==> Godunov (1st order) splitting used, 
     #   src_split == 2 or 'strang'  ==> Strang (2nd order) splitting used,  not recommended.
-    clawdata.source_split = 0
+    clawdata.source_split = 1
     
     
     # --------------------
@@ -279,7 +279,7 @@ def setrun(claw_pkg='amrclaw'):
     amrdata = rundata.amrdata
 
     # max number of refinement levels:
-    amrdata.amr_levels_max = 3
+    amrdata.amr_levels_max = 2
 
     # List of refinement ratios at each level (length at least
     # amr_level_max-1)
@@ -331,7 +331,10 @@ def setrun(claw_pkg='amrclaw'):
     regions = rundata.regiondata.regions 
     # to specify regions of refinement append lines of the form
     #  [minlevel,maxlevel,t1,t2,x1,x2,y1,y2]
-    regions.append([3,4,0,0.1,-.3,.3,0,.1])
+    regions.append([1,1,0,1e9,-1,1,0,1])  # whole domain, all time
+    regions.append([1,4,0,20,-1,1,0,1])  # whole domain, limited time
+    regions.append([1,4,0,1e9,-1,1,0.78,1])  # water layer, all time
+    regions.append([3,4,0,1,-.3,.3,0,.1])  # bottom boundary
 
 
 

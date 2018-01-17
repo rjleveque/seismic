@@ -95,6 +95,8 @@ c ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::;
       ! needed for stress at top boundary:
       common /combc/ t0wall,pi2,amplitude
 
+      g = 9.81
+
       hxmarg = hx*.01
       hymarg = hy*.01
 
@@ -238,7 +240,7 @@ c     # set the normal velocity:
      &                  * sin(pi*time/t_moving_bottom)
 
       do 306 j=1,nyb
-         yp = ylo_patch + (j-0.5d0)*hy
+         yc = ylo_patch + (j-0.5d0)*hy
          do 306 i=1,nrow
             xc = xlo_patch + (i-0.5d0)*hx
             call mapc2p(xc,yc,xp,yp)
@@ -311,9 +313,14 @@ c     # zero-order extrapolation:
 c     # free surface at top:
       do 406 j=jbeg,ncol
          do 406 i=1,nrow
-c               # no-stress portion of boundary:
-                val(3,i,j) = -val(3,i,jbeg-1)
-                val(2,i,j) = -val(2,i,jbeg-1)
+            val(3,i,j) = -val(3,i,jbeg-1)  ! sigma_12
+            ! extrapolate delta to top boundary to compute disturbance:
+            h_top = 1.5d0*val(6,i,jbeg-1) - 0.5d0*val(6,i,jbeg-2)
+            ! pressure due to excess water from surface disturbance:
+            rho = aux(1,i,j)
+            p_water = -rho * g * h_top  ! negate since sigma_jj = -p
+            val(1,i,j) = 2.d0*p_water - val(1,i,jbeg-1)
+            val(2,i,j) = 2.d0*p_water - val(2,i,jbeg-1)
   406    continue
       go to 499
 

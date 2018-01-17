@@ -57,6 +57,7 @@ SOURCES = \
   bc2amr.f \
   setaux.f90 \
   mapc2p.f90 \
+  src2.f90 \
   $(CLAW)/seismic/src/rp/rpn2_vc_elasticity_mapped_fault.f90 \
   $(CLAW)/seismic/src/rp/rpt2_vc_elasticity_mapped.f90 \
 
