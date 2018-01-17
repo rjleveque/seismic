@@ -14,6 +14,9 @@ subroutine src2(meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux,t,dt)
     real(kind=8) :: lambda_plate, mu_plate, rho_plate, lambda_water, mu_water, rho_water, g
     common /material/ lambda_plate, mu_plate, rho_plate, lambda_water, mu_water, rho_water, g
 
+    real(kind=8) :: zlower_ocean, xlower_slope, xlower_shelf, zlower_shelf, scale
+    common /topography/ zlower_ocean, xlower_slope, xlower_shelf, zlower_shelf, scale
+
     integer :: i, j
     real(kind=8) :: ycell
 
@@ -22,7 +25,7 @@ subroutine src2(meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux,t,dt)
       ycell = ylower + (j-0.5d0)*dy
       do i=1-mbc,mx+mbc
         q(6,i,j) = q(6,i,j) + 0.5d0*dt*q(5,i,j)
-        if (ycell > 0.d0) then
+        if (ycell > zlower_ocean) then
           q(5,i,j) = q(5,i,j) - dt*g/lambda_water*0.5d0*(q(1,i,j)+q(2,i,j))
         else
           q(5,i,j) = q(5,i,j) - dt*g/lambda_plate*0.5d0*(q(1,i,j)+q(2,i,j))

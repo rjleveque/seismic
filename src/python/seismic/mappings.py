@@ -3,8 +3,9 @@ from clawpack.geoclaw.data import LAT2METER
 
 class Mapping2D(object):
 
-    def __init__(self, fault):
+    def __init__(self, fault, probdata):
 
+        # Obtain fault parameters
         xp1 = 1e10
         xp2 = -1e10
         for subfault in fault.subfaults:
@@ -36,6 +37,18 @@ class Mapping2D(object):
         self.xp2 = xp2
         self.zp1 = zp1
         self.zp2 = zp2
+
+        # Obtain topography parameters
+        self.xlower_slope = probdata.xlower_slope
+        self.xlower_shelf = probdata.xlower_shelf
+        self.xlower_beach = probdata.xlower_beach
+        self.xlower_shore = probdata.xlower_shore
+        self.zlower_ocean = probdata.zlower_ocean
+        self.zlower_shelf = probdata.zlower_shelf
+        self.zlower_shore = probdata.zlower_shore
+
+        # Compute mapping factor
+        self.factor = -self.fault_depth / (int(np.ceil(-self.fault_depth/self.zlower_ocean))*self.zlower_ocean)
 
 class Mapping3D(object):
 

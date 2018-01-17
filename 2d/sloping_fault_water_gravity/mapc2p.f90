@@ -16,7 +16,7 @@
     common /topography/ zlower_ocean, xlower_slope, xlower_shelf, zlower_shelf, scale
 
     ! Local variables
-    real (kind=8) :: ls, alpha, xrot, zrot, factor, slope, scale
+    real (kind=8) :: ls, tol, xrot, zrot, factor, slope
 
     factor = 1.d0
     ! ! compute stretch factor in the z direction for computational grid to match
@@ -39,6 +39,7 @@
     end if
     xp = xc
     zp = zc*factor
+
     ! compute seperate physical grid that is the current grid, but rotated to
     ! match the fault
     xrot = center(1) + dcos(theta)*(xp-center(1)) + dsin(theta)*(zp-center(2))
@@ -52,10 +53,14 @@
     else
       ls = dabs(zp - center(2))
     end if
-    alpha = ls/(-center(2) + zlower_ocean)
-    if (alpha < 1.d0) then
-      xp = (1.d0-alpha)*xrot + alpha*xp
-      zp = (1.d0-alpha)*zrot + alpha*zp
+    tol = -center(2) + zlower_ocean
+    ls = ls + zlower_ocean ! this adds a buffer around the fault
+    if (ls < 0.0) then
+      xp = xrot
+      zp = zrot
+    elseif (ls < tol) then
+      xp = (tol-ls)/tol*xrot + ls/tol*xp
+      zp = (tol-ls)/tol*zrot + ls/tol*zp
     end if
 
     return
