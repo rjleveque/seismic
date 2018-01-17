@@ -119,16 +119,16 @@ def setplot(plotdata):
     plotaxes.axescmd = 'axes([.5,.6,.45,.4])' # 'subplot(222)'
     #plotaxes.xlimits = [0,2]
     #plotaxes.ylimits = [0,1]
-    plotaxes.title = 'sigma_12'
+    plotaxes.title = 'delta' #'sigma_12'
     plotaxes.scaled = True
     plotaxes.afteraxes = plot_interfaces
 
     # Set up for item on these axes:
     plotitem = plotaxes.new_plotitem(plot_type='2d_pcolor')
-    plotitem.plot_var = 2
+    plotitem.plot_var = 5 #2
     plotitem.pcolor_cmap = colormaps.blue_white_red
-    plotitem.pcolor_cmin = -csig
-    plotitem.pcolor_cmax = csig
+    plotitem.pcolor_cmin = -5. #-csig
+    plotitem.pcolor_cmax =  5. #csig
     plotitem.add_colorbar = True
     plotitem.colorbar_shrink = 0.7
     plotitem.amr_celledges_show = [False]
@@ -173,6 +173,60 @@ def setplot(plotdata):
     plotitem.colorbar_shrink = 0.7
     plotitem.amr_celledges_show = [False]
     plotitem.amr_patchedges_show = [0]
+
+
+
+    # Figure for surface displacement
+    plotfigure = plotdata.new_plotfigure(name='surface displacement', figno=3)
+
+    # Set up for axes in this figure:
+    plotaxes = plotfigure.new_plotaxes()
+    #plotaxes.xlimits = [0,2]
+    plotaxes.ylimits = [-6,6]
+    plotaxes.title = 'surface displacement'
+
+    def fixup(current_data):
+        from pylab import grid
+        grid(True)
+    plotaxes.afteraxes = fixup
+    
+    plotitem = plotaxes.new_plotitem(plot_type='1d_from_2d_data')
+    #plotitem.show = False
+
+    def xsec(current_data):
+        # Return x value and surface eta at this point, along y=0
+        global surf_min, surf_max
+        from pylab import find,ravel,nan
+        x = current_data.x
+        y = current_data.y
+        dy = current_data.dy
+        q = current_data.q
+
+        ij = find((y <= 0.) & (y > -dy))
+        x_slice = ravel(x)[ij]
+
+        # extrapolate displacement from cell centers to top surface:
+        eta_slice_1 = ravel(q[5,:,:])[ij]
+        ij = find((y <= -dy) & (y > -2*dy))
+        eta_slice_2 = ravel(q[5,:,:])[ij]
+        eta_slice = 1.5*eta_slice_1 - 0.5*eta_slice_2
+
+        #if current_data.level < 3:
+            #eta_slice = nan*eta_slice
+        #if len(eta_slice) > 0:
+            #print('min,max = ',eta_slice.min(),eta_slice.max())
+        try:
+            surf_min = min(surf_min,eta_slice.min())
+            surf_max = max(surf_max,eta_slice.max())
+        except:
+            pass
+        return x_slice, eta_slice
+
+    plotitem.map_2d_to_1d = xsec
+    plotitem.plotstyle = 'b-'     ## need to be able to set amr_plotstyle
+    plotitem.kwargs = {'markersize':5}
+    plotitem.amr_data_show = [1]  
+
 
 
 

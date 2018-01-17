@@ -55,8 +55,9 @@ SOURCES = \
   fdisc.f \
   bc2amr.f \
   setaux.f \
-  $(CLAW)/riemann/src/rpn2_vc_elasticity.f90 \
-  $(CLAW)/riemann/src/rpt2_vc_elasticity.f90 \
+  src2.f90 \
+  rpn2_vc_elasticity.f90 \
+  rpt2_vc_elasticity.f90 \
   $(AMRLIB)/cellave.f \
   $(AMRLIB)/fss.f \
   $(AMRLIB)/zeroin.f \
