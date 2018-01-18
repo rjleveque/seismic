@@ -384,7 +384,7 @@ def setrun(claw_pkg='amrclaw'):
 
     # ocean floor:
     dz_max = dz
-    for j in range(amrdata.amr_levels_max):
+    for j in range(amrdata.amr_levels_max-1):
         dz_max /= amrdata.refinement_ratios_y[j]
 
     for gaugeno,x in enumerate(xgauges):
