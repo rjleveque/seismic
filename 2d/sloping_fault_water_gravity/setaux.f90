@@ -49,6 +49,7 @@ subroutine setaux(mbc,mx,mz,xlower,zlower,dx,dz,maux,aux)
       do j=1-mbc,mz + mbc
         zcell = zlower + (j-0.5d0)*dz
         do i=1-mbc,mx + mbc
+          xcell = xlower + (i-0.5d0)*dx
 
           if (zcell .gt. zlower_ocean) then
             lambda_cell = lambda_water

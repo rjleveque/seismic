@@ -40,8 +40,8 @@ def setplot(plotdata):
 
     xlimits = [xcenter-0.5*probdata.domain_width, xcenter+0.5*probdata.domain_width]
     zlimits = [-probdata.domain_depth, 0.0]
-    xlimitsW = [xp1+10.0*probdata.zlower_ocean,xp2-10.0*probdata.zlower_ocean]
-    zlimitsW = [5.0*probdata.zlower_ocean, 0.0]
+    xlimitsW = xlimits #[xp1+probdata.zlower_ocean,xp2-probdata.zlower_ocean]
+    zlimitsW = [probdata.zlower_ocean, 0.0]
     abl_depth = probdata.abl_depth
     xlimits_trunc = [xlimits[0]+abl_depth, xlimits[1]-abl_depth]
     zlimits_trunc = [zlimits[0]+abl_depth, zlimits[1]]
@@ -127,19 +127,19 @@ def setplot(plotdata):
 
     # Set up for axes in this figure:
     plotaxes = plotfigure.new_plotaxes()
-    plotaxes.axescmd = 'subplot(211)'
+    plotaxes.axescmd = 'subplot(311)'
     plotaxes.xlimits = xlimitsW
     plotaxes.ylimits = zlimitsW
     plotaxes.title = '-trace(sigma)'
-    plotaxes.scaled = True
+    plotaxes.scaled = False
     plotaxes.afteraxes = plot_interfaces
 
     # Set up for item on these axes:
     plotitem = plotaxes.new_plotitem(plot_type='2d_pcolor')
     plotitem.plot_var = sigmatr
     plotitem.pcolor_cmap = colormaps.blue_white_red
-    plotitem.pcolor_cmin = -1e6
-    plotitem.pcolor_cmax = 1e6
+    plotitem.pcolor_cmin = -1e5
+    plotitem.pcolor_cmax = 1e5
     plotitem.add_colorbar = True
     plotitem.amr_celledges_show = [0]
     plotitem.amr_patchedges_show = [0]
@@ -149,19 +149,40 @@ def setplot(plotdata):
 
     # Set up for axes in this figure:
     plotaxes = plotfigure.new_plotaxes()
-    plotaxes.axescmd = 'subplot(212)'
+    plotaxes.axescmd = 'subplot(312)'
     plotaxes.xlimits = xlimitsW
     plotaxes.ylimits = zlimitsW
-    plotaxes.title = 'slip-direction-velocity'
-    plotaxes.scaled = True
+    plotaxes.title = 'horizontal velocity'
+    plotaxes.scaled = False
     plotaxes.afteraxes = plot_interfaces
 
     # Set up for item on these axes:
     plotitem = plotaxes.new_plotitem(plot_type='2d_pcolor')
-    plotitem.plot_var = slip_direction_vel
+    plotitem.plot_var = 3
     plotitem.pcolor_cmap = colormaps.blue_white_red
-    plotitem.pcolor_cmin = -1e-1
-    plotitem.pcolor_cmax = 1e-1
+    plotitem.pcolor_cmin = -1e-2
+    plotitem.pcolor_cmax = 1e-2
+    plotitem.add_colorbar = True
+    plotitem.amr_celledges_show = [0]
+    plotitem.amr_patchedges_show = [0]
+    plotitem.MappedGrid = True
+    plotitem.mapc2p = mapping.mapc2p
+
+    # Set up for axes in this figure:
+    plotaxes = plotfigure.new_plotaxes()
+    plotaxes.axescmd = 'subplot(313)'
+    plotaxes.xlimits = xlimitsW
+    plotaxes.ylimits = zlimitsW
+    plotaxes.title = 'vertical velocity'
+    plotaxes.scaled = False
+    plotaxes.afteraxes = plot_interfaces
+
+    # Set up for item on these axes:
+    plotitem = plotaxes.new_plotitem(plot_type='2d_pcolor')
+    plotitem.plot_var = 4
+    plotitem.pcolor_cmap = colormaps.blue_white_red
+    plotitem.pcolor_cmin = -1e-2
+    plotitem.pcolor_cmax = 1e-2
     plotitem.add_colorbar = True
     plotitem.amr_celledges_show = [0]
     plotitem.amr_patchedges_show = [0]

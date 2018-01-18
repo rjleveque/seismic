@@ -134,13 +134,26 @@ subroutine rpn2(ixy,maxm,meqn,mwaves,maux,mbc,mx,ql,qr,auxl,auxr,wave,s,amdq,apd
       a4 = (ql(4,i)  *ny - ql(5,i)  *nx + 0.5d0*slip)/csr
     else
       det = amul*csr + amur*csl
-      if (det.eq.0.d0) then
-        ! no s-waves
-        a3 = 0.d0
-        a4 = 0.d0
-      else
+      if (det > 1.d-10) then
+        ! internal rock interface
         a3 = (csr*dsigt - amur*dut) / det
         a4 = (csl*dsigt + amul*dut) / det
+      elseif (amul > 1.d-10 .and. amur < 1.d-10) then
+        ! interface between rock and water
+        !a3 = -dut / csl ! no-slip (continuity of tangential velocity)
+        a3 = dsigt / amul ! free-slip (zero tangential traction)
+        a4 = 0.d0
+      elseif (amul < 1.d-10 .and. amur > 1.d-10) then
+        ! interface between water and rock
+        a3 = 0.d0
+        !a4 = dut / csr ! no-slip (continuity of tangential velocity)
+        a4 = dsigt / amur ! free-slip (zero tangential traction)
+        print *, 'Not tested'
+        stop
+      else
+        ! internal water interface
+        a3 = 0.d0
+        a4 = 0.d0
       end if
     end if
 

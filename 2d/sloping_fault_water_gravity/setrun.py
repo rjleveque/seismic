@@ -330,13 +330,9 @@ def setrun(claw_pkg='amrclaw'):
 
     # List of refinement ratios at each level (length at least
     # amr_level_max-1)
-    amrdata.refinement_ratios_x = [4,2]
-    amrdata.refinement_ratios_y = [4,2]
-    amrdata.refinement_ratios_t = [4,2]
-#    amrdata.refinement_ratios_x = [8,4,2] # NOTE: if you change this, you should
-#    amrdata.refinement_ratios_y = [8,4,2] # change where the water gauges are
-#    amrdata.refinement_ratios_t = [8,4,2]
-
+    amrdata.refinement_ratios_x = [8,4,2]
+    amrdata.refinement_ratios_y = [8,4,2]
+    amrdata.refinement_ratios_t = [8,4,2]
 
     # Specify type of each aux variable in amrdata.auxtype.
     # This must be a list of length num_aux, each element of which is one
@@ -370,7 +366,7 @@ def setrun(claw_pkg='amrclaw'):
     # refined)
     # (closer to 1.0 => more small grids may be needed to cover flagged
     # cells)
-    amrdata.clustering_cutoff =0.7
+    amrdata.clustering_cutoff = 0.7
 
     # print info about each regridding up to this level:
     amrdata.verbosity_regrid = 0
@@ -388,7 +384,7 @@ def setrun(claw_pkg='amrclaw'):
 
     # ocean floor:
     dz_max = dz
-    for j in range(amrdata.amr_levels_max-1):
+    for j in range(amrdata.amr_levels_max):
         dz_max /= amrdata.refinement_ratios_y[j]
 
     for gaugeno,x in enumerate(xgauges):
@@ -396,7 +392,7 @@ def setrun(claw_pkg='amrclaw'):
 
     # ocean surface:
     for gaugeno,x in enumerate(xgauges):
-        gauges.append([ngauges+gaugeno,x,-1.0,0,1e10])
+        gauges.append([ngauges+gaugeno,x,-0.5*dz_max,0,1e10])
 
     # set gauge output increment to match rest of domain
     if clawdata.output_style==1:
@@ -414,16 +410,16 @@ def setrun(claw_pkg='amrclaw'):
     #  [minlevel,maxlevel,t1,t2,x1,x2,y1,y2]
 
     ## Region for the fault
-    regions.append([amrdata.amr_levels_max-1,amrdata.amr_levels_max-1,
+    regions.append([amrdata.amr_levels_max, amrdata.amr_levels_max,
                     0,rupture_rise_time,
                     fault_center-0.5*fault_width,fault_center+0.5*fault_width,
                     -fault_depth-dx, -fault_depth+dx])
 
-    # Only allow highest-refined level in water
-    regions.append([1,amrdata.amr_levels_max-1,
-                    0,1e9,
-                    -1e9,1e9,
-                    -1e9,zlower_ocean])
+    # # Only allow highest-refined level in water
+    # regions.append([1,amrdata.amr_levels_max-1,
+    #                 0,1e9,
+    #                 -1e9,1e9,
+    #                 -1e9,zlower_ocean])
 
 
     #  ----- For developers -----

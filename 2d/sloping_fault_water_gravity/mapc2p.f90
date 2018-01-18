@@ -54,7 +54,10 @@
       ls = dabs(zp - center(2))
     end if
     tol = -center(2) + zlower_ocean
-    ls = ls + zlower_ocean ! this adds a buffer around the fault
+    ! ensure that there is a neighborhood around the fault that is aligned to
+    ! the fault
+    ls = ls + zlower_ocean
+    tol = tol + zlower_ocean
     if (ls < 0.0) then
       xp = xrot
       zp = zrot

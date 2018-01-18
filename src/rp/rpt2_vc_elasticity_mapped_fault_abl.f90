@@ -154,10 +154,13 @@ subroutine rpt2(ixy,imp,maxm,meqn,mwaves,maux,mbc,mx,ql,qr,aux1,aux2,aux3,asdq,b
       a3 = 0.d0
     else
       det = amum*cs + amu*csm
-      if (det.eq.0.d0) then
-        a3 = 0.d0
-      else
+      if (det > 1.d-10) then
         a3 = (cs*dsigtm - amu*dutm) / det
+      elseif (amum > 1.d-10 .and. amu < 1.d-10) then
+        !a3 = -dutm / csm ! no-slip (continuity of tangential velocity)
+        a3 = dsigtm / amum ! free-slip (zero tangential traction)
+      else
+        a3 = 0.d0
       end if
     end if
 
@@ -165,10 +168,15 @@ subroutine rpt2(ixy,imp,maxm,meqn,mwaves,maux,mbc,mx,ql,qr,aux1,aux2,aux3,asdq,b
       a4 = 0.d0
     else
       det = amup*cs + amu*csp
-      if (det.eq.0.d0) then
-        a4 = 0.d0
-      else
+      if (det > 1.d-10) then
         a4 = (cs*dsigtp + amu*dutp) / det
+      elseif (amup > 1.d-10 .and. amu < 1.d-10) then
+        !a4 = dutp / csp ! no-slip (continuity of tangential velocity)
+        a4 = dsigtp / amup ! free-slip (zero tangential traction)
+        print *, 'Not tested'
+        stop
+      else
+        a4 = 0.d0
       end if
     end if
 

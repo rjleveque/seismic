@@ -83,6 +83,7 @@ class Mapping(Mapping2D):
         ls = np.where(xp < self.xcl, np.sqrt((xp-self.xcl)**2 + (zp-self.zcenter)**2), ls)
         ls = np.where(xp > self.xcr, np.sqrt((xp-self.xcr)**2 + (zp-self.zcenter)**2), ls)
         ls += self.zlower_ocean
+        tol += self.zlower_ocean
 
         # interpolate between grids
         xp = np.where(ls < tol, (tol-ls)/tol*x_rot + ls/tol*xp, xp)
