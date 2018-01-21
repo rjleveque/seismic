@@ -13,7 +13,7 @@ reload(dtopotools)
 from clawpack.seismic.mappings import Mapping2D
 from make_topo_and_grid import get_oceanfloor_parameters
 
-USE_TOPO = False
+USE_TOPO = True
 
 #------------------------------
 def setrun(claw_pkg='amrclaw'):
@@ -330,9 +330,9 @@ def setrun(claw_pkg='amrclaw'):
 
     # List of refinement ratios at each level (length at least
     # amr_level_max-1)
-    amrdata.refinement_ratios_x = [8,4]
-    amrdata.refinement_ratios_y = [8,4]
-    amrdata.refinement_ratios_t = [8,4]
+    amrdata.refinement_ratios_x = [8,2]
+    amrdata.refinement_ratios_y = [8,2]
+    amrdata.refinement_ratios_t = [8,2]
 
     # Specify type of each aux variable in amrdata.auxtype.
     # This must be a list of length num_aux, each element of which is one
@@ -409,17 +409,25 @@ def setrun(claw_pkg='amrclaw'):
     # to specify regions of refinement append lines of the form
     #  [minlevel,maxlevel,t1,t2,x1,x2,y1,y2]
 
-    ## Region for the fault
+    # Region for the fault
     regions.append([amrdata.amr_levels_max, amrdata.amr_levels_max,
                     0,rupture_rise_time,
                     fault_center-0.5*fault_width,fault_center+0.5*fault_width,
                     -fault_depth-dx, -fault_depth+dx])
 
-    # # Only allow highest-refined level in water
+    # Debug
     # regions.append([1,amrdata.amr_levels_max-1,
     #                 0,1e9,
     #                 -1e9,1e9,
-    #                 -1e9,zlower_ocean])
+    #                 zlower_ocean,1e9])
+
+
+    # Region for shelf (if exists)
+    if (zlower_shelf > zlower_ocean):
+        regions.append([1,amrdata.amr_levels_max-1,
+                        0,1e9,
+                        -1e9,1e9,
+                        zlower_ocean-amrdata.regrid_buffer_width*dz/8.0,1e9])
 
 
     #  ----- For developers -----
