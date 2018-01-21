@@ -330,9 +330,9 @@ def setrun(claw_pkg='amrclaw'):
 
     # List of refinement ratios at each level (length at least
     # amr_level_max-1)
-    amrdata.refinement_ratios_x = [8,2]
-    amrdata.refinement_ratios_y = [8,2]
-    amrdata.refinement_ratios_t = [8,2]
+    amrdata.refinement_ratios_x = [2,8]
+    amrdata.refinement_ratios_y = [2,8]
+    amrdata.refinement_ratios_t = [2,8]
 
     # Specify type of each aux variable in amrdata.auxtype.
     # This must be a list of length num_aux, each element of which is one
@@ -411,7 +411,7 @@ def setrun(claw_pkg='amrclaw'):
 
     # Region for the fault
     regions.append([amrdata.amr_levels_max, amrdata.amr_levels_max,
-                    0,rupture_rise_time,
+                    0,clawdata.dt_initial, #rupture_rise_time,
                     fault_center-0.5*fault_width,fault_center+0.5*fault_width,
                     -fault_depth-dx, -fault_depth+dx])
 
@@ -427,7 +427,8 @@ def setrun(claw_pkg='amrclaw'):
         regions.append([1,amrdata.amr_levels_max-1,
                         0,1e9,
                         -1e9,1e9,
-                        zlower_ocean-amrdata.regrid_buffer_width*dz/8.0,1e9])
+                        zlower_ocean \
+                         -amrdata.regrid_buffer_width*dz,1e9])
 
 
     #  ----- For developers -----
