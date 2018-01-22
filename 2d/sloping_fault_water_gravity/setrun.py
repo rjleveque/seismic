@@ -13,7 +13,7 @@ reload(dtopotools)
 from clawpack.seismic.mappings import Mapping2D
 from make_topo_and_grid import get_oceanfloor_parameters
 
-USE_TOPO = False
+USE_TOPO = True
 
 #------------------------------
 def setrun(claw_pkg='amrclaw'):
