@@ -130,14 +130,39 @@ subroutine rpn2(ixy,maxm,meqn,mwaves,maux,mbc,mx,ql,qr,auxl,auxr,wave,s,amdq,apd
 
         ! S-wave strengths:
         det = amul*csr + amur*csl
-        if (det.eq.0.d0) then
-            ! no s-waves
-            a3 = 0.d0
-            a4 = 0.d0
-        else
-            a3 = (csr*dsig12 + amur*dv) / det
-            a4 = (csl*dsig12 - amul*dv) / det
-        endif
+
+!       if (det.eq.0.d0) then
+!           ! no s-waves
+!           a3 = 0.d0
+!           a4 = 0.d0
+!       else
+!           a3 = (csr*dsig12 + amur*dv) / det
+!           a4 = (csl*dsig12 - amul*dv) / det
+!       endif
+
+      ! properly handle case when mu is 0 only on one side of interface:
+      if (det > 1.d-10) then
+        ! internal rock interface
+        a3 = (csr*dsig12 + amur*dv) / det
+        a4 = (csl*dsig12 - amul*dv) / det
+      elseif (amul > 1.d-10 .and. amur < 1.d-10) then
+        ! interface between rock and water
+        !a3 = -dv / csl ! no-slip (continuity of tangential velocity)
+        a3 = dsig12 / amul ! free-slip (zero tangential traction)
+        a4 = 0.d0
+      elseif (amul < 1.d-10 .and. amur > 1.d-10) then
+        ! interface between water and rock
+        a3 = 0.d0
+        !a4 = dv / csr ! no-slip (continuity of tangential velocity)
+        a4 = dsig12 / amur ! free-slip (zero tangential traction)
+        !print *, 'Not tested'
+        !stop
+      else
+        ! internal water interface
+        a3 = 0.d0
+        a4 = 0.d0
+      end if
+
 
         ! 5th wave has velocity 0 so is not computed or propagated.
 
