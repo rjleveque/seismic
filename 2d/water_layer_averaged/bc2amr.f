@@ -316,8 +316,8 @@ c     # free surface at top:
             ! pressure due to excess water from surface disturbance:
             rho = aux(1,i,j)
             p_water = -rho * g * h_top  ! negate since sigma_jj = -p
-            !val(1,i,j) = 2.d0*p_water - val(1,i,jbeg-1)
-            val(1,i,j) = - val(1,i,jbeg-1)
+            !val(1,i,j) = - val(1,i,jbeg-1)
+            val(1,i,j) = 2.d0*p_water - val(1,i,jbeg-1)
             val(2,i,j) = 2.d0*p_water - val(2,i,jbeg-1)
   406    continue
       go to 499
