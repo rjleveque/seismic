@@ -55,13 +55,14 @@ MODULES = \
 	$(SEISLIB)/fault_module.f90
 
 SOURCES = \
+  flux2.f \
   qinit.f \
   setprob.f90 \
   bc2amr.f \
   setaux.f90 \
   mapc2p.f90 \
   src2.f90 \
-	$(SEISLIB)/b4step2.f90 \
+	b4step2.f90 \
 	$(SEISLIB)/tick.f \
   $(CLAW)/seismic/src/rp/rpn2_vc_elasticity_mapped_fault_abl.f90 \
   $(CLAW)/seismic/src/rp/rpt2_vc_elasticity_mapped_fault_abl.f90

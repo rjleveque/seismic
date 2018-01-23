@@ -70,8 +70,8 @@ def setplot(plotdata):
         # return vel dot tau, where tau is tangent to fault
         tau_x = (xp2 - xp1)/fault_width
         tau_y = (zp2 - zp1)/fault_width
-        tau_x = np.where(current_data.y*mapping.factor > zcenter, -tau_x, tau_x)
-        tau_y = np.where(current_data.y*mapping.factor > zcenter, -tau_y, tau_y)
+        tau_x = np.where(current_data.y+mapping.shift > zcenter, -tau_x, tau_x)
+        tau_y = np.where(current_data.y+mapping.shift > zcenter, -tau_y, tau_y)
         u = current_data.q[3,:,:]
         v = current_data.q[4,:,:]
         return u*tau_x + v*tau_y
@@ -132,7 +132,6 @@ def setplot(plotdata):
     plotaxes.ylimits = zlimitsW
     plotaxes.title = '-trace(sigma)'
     plotaxes.scaled = False
-    plotaxes.afteraxes = plot_interfaces
 
     # Set up for item on these axes:
     plotitem = plotaxes.new_plotitem(plot_type='2d_pcolor')
@@ -154,7 +153,6 @@ def setplot(plotdata):
     plotaxes.ylimits = zlimitsW
     plotaxes.title = 'horizontal velocity'
     plotaxes.scaled = False
-    plotaxes.afteraxes = plot_interfaces
 
     # Set up for item on these axes:
     plotitem = plotaxes.new_plotitem(plot_type='2d_pcolor')
@@ -175,7 +173,6 @@ def setplot(plotdata):
     plotaxes.ylimits = zlimitsW
     plotaxes.title = 'vertical velocity'
     plotaxes.scaled = False
-    plotaxes.afteraxes = plot_interfaces
 
     # Set up for item on these axes:
     plotitem = plotaxes.new_plotitem(plot_type='2d_pcolor')
@@ -195,9 +192,10 @@ def setplot(plotdata):
 
     # Set up for axes in this figure:
     plotaxes = plotfigure.new_plotaxes()
+    plotaxes.axescmd = 'subplot(211)'
     plotaxes.xlimits = xlimits
     plotaxes.ylimits = zlimits
-    plotaxes.title = 'Level 2 grid patches'
+    plotaxes.title = 'grid cells'
     plotaxes.scaled = True
     plotaxes.afteraxes = plot_interfaces
 
@@ -208,6 +206,23 @@ def setplot(plotdata):
     plotitem.amr_patchedges_show = [0]
     plotitem.MappedGrid = True
     plotitem.mapc2p = mapping.mapc2p
+
+    # Set up for axes in this figure:
+    plotaxes = plotfigure.new_plotaxes()
+    plotaxes.axescmd = 'subplot(212)'
+    plotaxes.xlimits = xlimitsW
+    plotaxes.ylimits = zlimitsW
+    plotaxes.title = 'grid cells'
+    plotaxes.scaled = False
+
+    # Set up for item on these axes:
+    plotitem = plotaxes.new_plotitem(plot_type='2d_patch')
+    plotitem.amr_patch_bgcolor = ['#ffeeee', '#eeeeff', '#eeffee', '#ffffff']
+    plotitem.amr_celledges_show = [1]
+    plotitem.amr_patchedges_show = [0]
+    plotitem.MappedGrid = True
+    plotitem.mapc2p = mapping.mapc2p
+
 
     # Figure for surface displacement
     plotfigure = plotdata.new_plotfigure(name='surface displacement', figno=4)
@@ -244,8 +259,8 @@ def setplot(plotdata):
         # extrapolate displacement from cell centers to top surface:
         eta_slice = 1.5*eta_slice_1 - 0.5*eta_slice_2
 
-        # plot only finest level:
-        if current_data.level < 2:
+        # dont plot redundant levels:
+        if current_data.level == 1:
             eta_slice = nan*eta_slice
 
         return x_slice, eta_slice

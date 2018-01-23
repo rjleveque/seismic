@@ -1,4 +1,3 @@
-
 subroutine b4step2(mbc,mx,my,meqn,q,xlower,ylower,dx,dy,t,dt,maux,aux)
 
 !   set slip before call to step2
@@ -12,6 +11,9 @@ subroutine b4step2(mbc,mx,my,meqn,q,xlower,ylower,dx,dy,t,dt,maux,aux)
     real(kind=8), intent(inout) :: q(meqn,1-mbc:mx+mbc,1-mbc:my+mbc)
     real(kind=8), intent(inout) :: aux(maux,1-mbc:mx+mbc,1-mbc:my+mbc)
 
+    real(kind=8) :: fault_shift
+    common /mapping/ fault_shift
+
     integer :: i, j, k
     real(kind=8) :: xcell, ycell, xpcell, ypcell
 
@@ -20,7 +22,7 @@ subroutine b4step2(mbc,mx,my,meqn,q,xlower,ylower,dx,dy,t,dt,maux,aux)
 
       do j=1-mbc,my+mbc
         ycell = ylower + (j-0.5d0)*dy
-        if (abs(ycell - 0.5d0*dy - center(2)) < 0.5d0*dy) then
+        if (abs(ycell - 0.5d0*dy + fault_shift - center(2)) < 0.5d0*dy) then
 
           do i=1-mbc,mx+mbc
             xcell = xlower + (i-0.5d0)*dx

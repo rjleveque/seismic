@@ -18,8 +18,8 @@ subroutine setaux(mbc,mx,mz,xlower,zlower,dx,dz,maux,aux)
     real(kind=8) :: lambda_plate, mu_plate, rho_plate, lambda_water, mu_water, rho_water, g
     common /material/ lambda_plate, mu_plate, rho_plate, lambda_water, mu_water, rho_water, g
 
-    real(kind=8) :: zlower_ocean, xlower_slope, xlower_shelf, zlower_shelf, scale
-    common /topography/ zlower_ocean, xlower_slope, xlower_shelf, zlower_shelf, scale
+    real(kind=8) :: zlower_ocean, xlower_slope, xlower_shelf, zlower_shelf
+    common /topography/ zlower_ocean, xlower_slope, xlower_shelf, zlower_shelf
 
 
 

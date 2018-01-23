@@ -15,8 +15,11 @@
     real(kind=8) :: lambda_plate, mu_plate, rho_plate, lambda_water, mu_water, rho_water, g
     common /material/ lambda_plate, mu_plate, rho_plate, lambda_water, mu_water, rho_water, g
 
-    real(kind=8) :: zlower_ocean, xlower_slope, xlower_shelf, zlower_shelf, scale
-    common /topography/ zlower_ocean, xlower_slope, xlower_shelf, zlower_shelf, scale
+    real(kind=8) :: zlower_ocean, xlower_slope, xlower_shelf, zlower_shelf
+    common /topography/ zlower_ocean, xlower_slope, xlower_shelf, zlower_shelf
+
+    real(kind=8) :: fault_shift
+    common /mapping/ fault_shift
 
     real(kind=8) :: xlower, xupper, ylower
 !
@@ -58,9 +61,8 @@
     ABLxpos(2) = xupper - ABLdepth
     ABLypos = ylower + ABLdepth
 
-!    # Compute vertical scale of grids aligned to fault depth versus to ocean
-!      floor
-    scale = center(2) / (ceiling(center(2)/zlower_ocean)*zlower_ocean)
+!    # Compute vertical shift for computational grid to line up with fault depth
+    fault_shift = center(2) - ceiling(center(2)/zlower_ocean)*zlower_ocean
 
 !   # Set material parameters
     lambda_plate = 60.d9  ! Pa

@@ -47,8 +47,10 @@ class Mapping2D(object):
         self.zlower_shelf = probdata.zlower_shelf
         self.zlower_shore = probdata.zlower_shore
 
-        # Compute mapping factor
-        self.factor = -self.fault_depth / (int(np.ceil(-self.fault_depth/self.zlower_ocean))*self.zlower_ocean)
+        # Compute mapping shift (how much the computational grid needs to be
+        # shifted vertically to line up with fault depth)
+        zclower_fault =  np.ceil(-self.fault_depth / self.zlower_ocean)*self.zlower_ocean
+        self.shift = -self.fault_depth - zclower_fault
 
 class Mapping3D(object):
 

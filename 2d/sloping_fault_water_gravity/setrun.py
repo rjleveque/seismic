@@ -188,7 +188,7 @@ def setrun(claw_pkg='amrclaw'):
     elif clawdata.output_style == 3:
         # Output every step_interval timesteps over total_steps timesteps:
         clawdata.output_step_interval = 1
-        clawdata.total_steps = 40
+        clawdata.total_steps = 10
         clawdata.output_t0 = True  # output at initial (or restart) time?
 
 
@@ -220,7 +220,7 @@ def setrun(claw_pkg='amrclaw'):
 
     # Initial time step for variable dt.
     # (If dt_variable==0 then dt=dt_initial for all steps)
-    clawdata.dt_initial = 0.01
+    clawdata.dt_initial = 0.001
 
     # Max time step to be allowed if variable dt used:
     clawdata.dt_max = 1.000000e+99
@@ -330,9 +330,9 @@ def setrun(claw_pkg='amrclaw'):
 
     # List of refinement ratios at each level (length at least
     # amr_level_max-1)
-    amrdata.refinement_ratios_x = [8,2]
-    amrdata.refinement_ratios_y = [8,2]
-    amrdata.refinement_ratios_t = [8,2]
+    amrdata.refinement_ratios_x = [4,4]
+    amrdata.refinement_ratios_y = [4,4]
+    amrdata.refinement_ratios_t = [4,4]
 
     # Specify type of each aux variable in amrdata.auxtype.
     # This must be a list of length num_aux, each element of which is one
@@ -366,7 +366,7 @@ def setrun(claw_pkg='amrclaw'):
     # refined)
     # (closer to 1.0 => more small grids may be needed to cover flagged
     # cells)
-    amrdata.clustering_cutoff = 0.7
+    amrdata.clustering_cutoff = 0.99
 
     # print info about each regridding up to this level:
     amrdata.verbosity_regrid = 0
@@ -424,11 +424,18 @@ def setrun(claw_pkg='amrclaw'):
 
     # Region for shelf (if exists)
     if (zlower_shelf > zlower_ocean):
-        regions.append([1,amrdata.amr_levels_max-1,
+        regions.append([amrdata.amr_levels_max, amrdata.amr_levels_max,
                         0,1e9,
+                        -1e9, 1e9,
+                        -1e9, -10e3])
+        regions.append([amrdata.amr_levels_max, amrdata.amr_levels_max,
+                        0,1e9,
+                        -1e9, -60e3,
+                        -1e9, 1e9])
+
+        regions.append([1,amrdata.amr_levels_max-1, 0,1e9,
                         -1e9,1e9,
-                        zlower_ocean \
-                         -amrdata.regrid_buffer_width*dz/amrdata.refinement_ratios_y[0],1e9])
+                        -1e9, 1e9])
 
 
     #  ----- For developers -----
