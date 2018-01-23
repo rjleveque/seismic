@@ -37,8 +37,8 @@ def setrun(claw_pkg='amrclaw'):
     #------------------------------------------------------------------
     # Sample setup to write one line to setprob.data ...
     probdata = rundata.new_UserData(name='probdata',fname='setprob.data')
-    probdata.add_param('rho1',  1000.0,  'density in top layer (kg/m**3)')
-    probdata.add_param('lam1',   2.2e9,  'lambda in top layer (Pa)')
+    probdata.add_param('rho1',  1025.0,  'density in top layer (kg/m**3)')
+    probdata.add_param('lam1',   2.30625e9,  'lambda in top layer (Pa)')
     probdata.add_param('mu1',    0.0,  'mu in top layer (Pa)')
     #probdata.add_param('mu1',    0.003e9,  'mu in top layer (Pa)')
     probdata.add_param('rho2',  2500.0,  'density in bottom layer (kg/m**3)')
@@ -69,7 +69,7 @@ def setrun(claw_pkg='amrclaw'):
     
     # Number of grid cells:
     clawdata.num_cells[0] = 200      # mx
-    clawdata.num_cells[1] =  20     # my
+    clawdata.num_cells[1] =  40     # my
     
 
     # ---------------
@@ -117,7 +117,7 @@ def setrun(claw_pkg='amrclaw'):
         # Output ntimes frames at equally spaced times up to tfinal:
         # Can specify num_output_times = 0 for no output
         clawdata.num_output_times = 200
-        clawdata.tfinal = 800.
+        clawdata.tfinal = 1000.
         clawdata.output_t0 = True  # output at initial (or restart) time?
         
     elif clawdata.output_style == 2:

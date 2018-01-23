@@ -10,7 +10,8 @@ function setplot is called to set the plot parameters.
 import numpy as np
 
 csig = 10
-cdivcurl = 1e-5
+cdivcurl = 1e-6
+xlimits = [-200e3, 200e3]
 
 h0 = 4500.  # ocean depth
 cw = 1500.  # speed of sound in water
@@ -19,6 +20,27 @@ rho = 1025. # density of water
 rhog = rho*g
 period = 4 * h0 / cw # time for signal transit depth 4 times
 ybot = -h0
+
+x0_slope = 50e3
+x0_shelf = 100e3
+z0_ocean = -h0
+z0_shelf = -2500.
+
+def zbottom(x):
+    #ybottom = -10000. + 6000*(x+40e3)/80e3
+
+    slope_of_slope = (z0_ocean - z0_shelf) / (x0_slope - x0_shelf)
+    ybottom = z0_ocean
+    ybottom = np.where(x<x0_slope, z0_ocean, \
+                    z0_ocean + slope_of_slope*(x-x0_slope))
+    ybottom = np.where(x<x0_shelf, ybottom, z0_shelf)
+    return ybottom
+
+def plot_interfaces(current_data):
+    from pylab import linspace, plot
+    x = linspace(-200e3, 200e3, 101)
+    plot(x, zbottom(x), 'k')
+
 
 #--------------------------
 def setplot(plotdata):
@@ -36,13 +58,6 @@ def setplot(plotdata):
 
     plotdata.clearfigures()  # clear any old figures,axes,items data
     plotdata.format = 'binary'
-    
-    def plot_interfaces(current_data):
-        from pylab import linspace, plot
-        xl = linspace(-200e3, 200e3, 101)
-        yl = -4500. + 0*xl
-        #yl = -10000. + 6000*(xl+40e3)/80e3
-        plot(xl,yl,'k')
     
 
     def sigmatr(current_data):
@@ -198,20 +213,6 @@ def setplot(plotdata):
     #plotaxes.xlimits = [0,2]
     plotaxes.ylimits = [-15,15]
     plotaxes.title = 'surface displacement'
-
-    def fixup(current_data):
-        from pylab import grid
-        from clawpack.visclaw import legend_tools
-        grid(True)
-        labels = ['surface displacement','bottom displacement',
-                  'bottom pressure diff']
-        colors = ['b','g','r']
-        linestyles = '-'
-        markers = ''
-        legend_tools.add_legend(labels,colors,linestyles,markers,
-                loc='upper left')
-        
-    plotaxes.afteraxes = fixup
     
     plotitem = plotaxes.new_plotitem(plot_type='1d_from_2d_data')
     #plotitem.show = False
@@ -253,7 +254,7 @@ def setplot(plotdata):
     plotitem.amr_data_show = [1]  
 
     plotitem = plotaxes.new_plotitem(plot_type='1d_from_2d_data')
-    #plotitem.show = False
+    plotitem.show = False
 
     def xsec_bottom_delta(current_data):
         from pylab import find,ravel,nan
@@ -278,7 +279,7 @@ def setplot(plotdata):
     plotitem.amr_data_show = [1]  
 
     plotitem = plotaxes.new_plotitem(plot_type='1d_from_2d_data')
-    #plotitem.show = False
+    plotitem.show = False
 
     def xsec_bottom_pressure(current_data):
         from pylab import find,ravel,nan
@@ -298,12 +299,50 @@ def setplot(plotdata):
             p_slice *= nan
         return x_slice, p_slice
 
+
+
+
+
     plotitem.map_2d_to_1d = xsec_bottom_pressure
     plotitem.plotstyle = 'r-'     ## need to be able to set amr_plotstyle
     plotitem.kwargs = {'markersize':5}
     plotitem.amr_data_show = [1]  
 
+    def plot_bottom_pressure(current_data):
+        from numpy import linspace, ones
+        from pylab import plot, subplot, xlim, ylim, title, legend
+        from clawpack.visclaw import gridtools
 
+        framesoln = current_data.framesoln
+        xout = linspace(xlimits[0], xlimits[1], 1000)
+        #eta_swe, u_swe = swe_solution(xout, framesoln.t)
+        yout = zbottom(xout) + 10.
+        delta_bottom = gridtools.grid_output(framesoln, 5, xout, yout)
+        pressure = -gridtools.grid_output(framesoln, 0, xout, yout)
+        pdiff = pressure  / rhog - delta_bottom
+        plot(xout, pdiff, 'r')
+        plot(xout, delta_bottom, 'g')
+        #import pdb; pdb.set_trace()
+
+
+    def fixup(current_data):
+        from pylab import grid
+        from clawpack.visclaw import legend_tools
+
+        plot_bottom_pressure(current_data)
+        grid(True)
+        #labels = ['surface displacement','bottom displacement',
+        #          'bottom pressure diff']
+        #colors = ['b','g','r']
+        labels = ['surface displacement','bottom displacement',
+                  'bottom pressure diff']
+        colors = ['b','g','r']
+        linestyles = '-'
+        markers = ''
+        legend_tools.add_legend(labels,colors,linestyles,markers,
+                loc='upper left')
+        
+    plotaxes.afteraxes = fixup
 
     # Figure for grid cells
     plotfigure = plotdata.new_plotfigure(name='cells', figno=2)
