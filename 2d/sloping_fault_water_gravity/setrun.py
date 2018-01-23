@@ -77,7 +77,7 @@ def setrun(claw_pkg='amrclaw'):
     fault = dtopotools.Fault()
     fault.read('fault.data')
 
-    mapping = Mapping2D(fault, probdata)
+    mapping = Mapping2D(fault)
     fault_width = mapping.fault_width
     fault_depth = mapping.fault_depth
     fault_center = mapping.xcenter
@@ -102,22 +102,25 @@ def setrun(claw_pkg='amrclaw'):
     clawdata.num_dim = num_dim
 
     # Number of grid cells:
-    num_cells_fault = 10
+    num_cells_fault = 40
 
     # determine cell number and set computational boundaries
-    dx = fault_width/num_cells_fault
+    target_dx = fault_width/num_cells_fault
     # x direction
-    num_cells_above_fault = np.ceil((xupper_domain - (fault_center+0.5*fault_width))/dx)
+    num_cells_across_slope = np.ceil((xlower_shelf-xlower_slope)/target_dx)
+    dx = (xlower_shelf-xlower_slope)/num_cells_across_slope
+    num_cells_above_slope = np.ceil((xupper_domain - xlower_shelf)/dx)
     target_num_cells = np.rint(probdata.domain_width/dx)
-    num_cells_below_fault = target_num_cells - num_cells_above_fault - num_cells_fault
+    num_cells_below_slope = target_num_cells - num_cells_above_slope - num_cells_across_slope
     clawdata.num_cells[0] = int(target_num_cells)
-    clawdata.lower[0] = fault_center-0.5*fault_width - num_cells_below_fault*dx
-    clawdata.upper[0] = fault_center+0.5*fault_width + num_cells_above_fault*dx
+    clawdata.lower[0] = xlower_slope - num_cells_below_slope*dx
+    clawdata.upper[0] = xlower_shelf + num_cells_above_slope*dx
     # z direction
-    dz = -zlower_ocean
-    clawdata.num_cells[1] = int(probdata.domain_depth/dz)
+    num_cells_across_ocean = np.ceil(-zlower_ocean/dx)
+    dz = -zlower_ocean/num_cells_across_ocean
+    clawdata.num_cells[1] = int(np.rint(probdata.domain_depth/dz))
     clawdata.lower[1] = -clawdata.num_cells[1]*dz
-    clawdata.upper[1] = 0.0
+    clawdata.upper[1] = zupper_domain = 0.0
 
     # add absorbing layer
     target_num_cells = np.rint(probdata.abl_depth/dx)
@@ -171,7 +174,7 @@ def setrun(claw_pkg='amrclaw'):
     # Specify at what times the results should be written to fort.q files.
     # Note that the time integration stops after the final output time.
 
-    clawdata.output_style = 1
+    clawdata.output_style = 3
 
     if clawdata.output_style==1:
         # Output ntimes frames at equally spaced times up to tfinal:
@@ -187,8 +190,8 @@ def setrun(claw_pkg='amrclaw'):
 
     elif clawdata.output_style == 3:
         # Output every step_interval timesteps over total_steps timesteps:
-        clawdata.output_step_interval = 1
-        clawdata.total_steps = 10
+        clawdata.output_step_interval = 10
+        clawdata.total_steps = 100
         clawdata.output_t0 = True  # output at initial (or restart) time?
 
 
@@ -326,13 +329,13 @@ def setrun(claw_pkg='amrclaw'):
     amrdata = rundata.amrdata
 
     # max number of refinement levels:
-    amrdata.amr_levels_max = 3
+    amrdata.amr_levels_max = 2
 
     # List of refinement ratios at each level (length at least
     # amr_level_max-1)
-    amrdata.refinement_ratios_x = [4,4]
-    amrdata.refinement_ratios_y = [4,4]
-    amrdata.refinement_ratios_t = [4,4]
+    amrdata.refinement_ratios_x = [4]
+    amrdata.refinement_ratios_y = [4]
+    amrdata.refinement_ratios_t = [4]
 
     # Specify type of each aux variable in amrdata.auxtype.
     # This must be a list of length num_aux, each element of which is one
@@ -366,7 +369,7 @@ def setrun(claw_pkg='amrclaw'):
     # refined)
     # (closer to 1.0 => more small grids may be needed to cover flagged
     # cells)
-    amrdata.clustering_cutoff = 0.99
+    amrdata.clustering_cutoff = 0.7
 
     # print info about each regridding up to this level:
     amrdata.verbosity_regrid = 0
@@ -388,7 +391,7 @@ def setrun(claw_pkg='amrclaw'):
         dz_max /= amrdata.refinement_ratios_y[j]
 
     for gaugeno,x in enumerate(xgauges):
-        gauges.append([gaugeno,x,zlower_ocean + 0.5*dz_max,0,1e10])
+        gauges.append([gaugeno,x,zlower_ocean - 0.5*dz_max,0,1e10])
 
     # ocean surface:
     for gaugeno,x in enumerate(xgauges):
@@ -411,31 +414,16 @@ def setrun(claw_pkg='amrclaw'):
 
     # Region for the fault
     regions.append([amrdata.amr_levels_max, amrdata.amr_levels_max,
-                    0,clawdata.dt_initial, #rupture_rise_time,
+                    0,clawdata.dt_initial,
                     fault_center-0.5*fault_width,fault_center+0.5*fault_width,
                     -fault_depth-dx, -fault_depth+dx])
 
-    # Debug
-    # regions.append([1,amrdata.amr_levels_max-1,
-    #                 0,1e9,
-    #                 -1e9,1e9,
-    #                 zlower_ocean,1e9])
-
-
-    # Region for shelf (if exists)
-    if (zlower_shelf > zlower_ocean):
-        regions.append([amrdata.amr_levels_max, amrdata.amr_levels_max,
-                        0,1e9,
-                        -1e9, 1e9,
-                        -1e9, -10e3])
-        regions.append([amrdata.amr_levels_max, amrdata.amr_levels_max,
-                        0,1e9,
-                        -1e9, -60e3,
-                        -1e9, 1e9])
-
-        regions.append([1,amrdata.amr_levels_max-1, 0,1e9,
-                        -1e9,1e9,
-                        -1e9, 1e9])
+    # Region restriction for water
+    regions.append([1,amrdata.amr_levels_max-1,
+                    0,1e9,
+                    -1e9,1e9,
+                    zlower_ocean - dz * \
+                    amrdata.regrid_buffer_width, 1e9])
 
 
     #  ----- For developers -----

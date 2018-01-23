@@ -14,6 +14,8 @@ def test(mfault):
     fault.read('fault.data')
     mapping = Mapping(fault, probdata)
 
+    xlower_slope = mapping.xlower_slope
+    xlower_shelf = mapping.xlower_shelf
     zlower_ocean = mapping.zlower_ocean
     fault_center = mapping.xcenter
     fault_depth = mapping.fault_depth
@@ -23,20 +25,25 @@ def test(mfault):
     # additional comments can be found there
     xupper_domain = mapping.xlower_shore
     # determine cell number and set computational boundaries
-    dx = fault_width/mfault
+    target_dx = fault_width/mfault
     # x direction
-    num_cells_above_fault = np.ceil((xupper_domain - (fault_center+0.5*fault_width))/dx)
+    num_cells_across_slope = np.ceil((xlower_shelf-xlower_slope)/target_dx)
+    dx = (xlower_shelf-xlower_slope)/num_cells_across_slope
+    num_cells_above_slope = np.ceil((xupper_domain - xlower_shelf)/dx)
     target_num_cells = np.rint(probdata.domain_width/dx)
-    num_cells_below_fault = target_num_cells - num_cells_above_fault - mfault
+    num_cells_below_slope = target_num_cells - num_cells_above_slope - num_cells_across_slope
     mx = int(target_num_cells)
-    xlower_domain = fault_center-0.5*fault_width - num_cells_below_fault*dx
-    xupper_domain = fault_center+0.5*fault_width + num_cells_above_fault*dx
+    xlower_domain = xlower_slope - num_cells_below_slope*dx
+    xupper_domain = xlower_shelf + num_cells_above_slope*dx
 
     # z direction
-    dz = -mapping.zlower_ocean
+    num_cells_across_ocean = np.ceil(-zlower_ocean/dx)
+    dz = -zlower_ocean/num_cells_across_ocean
     mz = int(np.rint(probdata.domain_depth/dz))
     zlower_domain = -mz*dz
     zupper_domain = 0.0
+
+    mapping.fault_zshift = -fault_depth + np.ceil(fault_depth/dz)*dz
 
     x = linspace(xlower_domain, xupper_domain, mx+1)
     z = linspace(zlower_domain, zupper_domain, mz+1)
@@ -51,8 +58,21 @@ def test(mfault):
 
 class Mapping(Mapping2D):
 
-    def __init__(self, fault, probdata):
-        super(Mapping,self).__init__(fault, probdata)
+    def __init__(self, fault, probdata, clawdata=None):
+        super(Mapping,self).__init__(fault)
+        # Obtain topography parameters
+        self.xlower_slope = probdata.xlower_slope
+        self.xlower_shelf = probdata.xlower_shelf
+        self.xlower_beach = probdata.xlower_beach
+        self.xlower_shore = probdata.xlower_shore
+        self.zlower_ocean = probdata.zlower_ocean
+        self.zlower_shelf = probdata.zlower_shelf
+        self.zlower_shore = probdata.zlower_shore
+
+        self.fault_zshift = 0.0
+        if (clawdata is not None):
+            dz = (clawdata.upper[1]-clawdata.lower[1])/clawdata.num_cells[1]
+            self.fault_zshift = self.zcenter + np.ceil(-self.zcenter/dz)*dz
 
     def mapc2p(self,xc,zc):
         """
@@ -71,11 +91,14 @@ class Mapping(Mapping2D):
         shift = np.zeros(np.shape(zc))
         shift = where(xc > self.xlower_slope, (xc-self.xlower_slope)*slope, shift)
         shift = where(xc > self.xlower_shelf, self.zlower_shelf-self.zlower_ocean, shift)
+        shift = where(zc < self.zlower_ocean,
+            (zc + self.fault_depth)/(self.zlower_ocean+self.fault_depth)*shift, shift)
+        shift = where(zc < -self.fault_depth, 0.0, shift)
         x_floor = xc
         z_floor = where(zc > self.zlower_ocean, zc*scale, zc+shift)
 
         # define grid that is rotated to line up with fault
-        zc = zc + self.shift
+        zc = zc + self.fault_zshift
         x_rot = self.xcenter + np.cos(self.theta)*(xc-self.xcenter) + np.sin(self.theta)*(zc-self.zcenter)
         z_rot = self.zcenter - np.sin(self.theta)*(xc-self.xcenter) + np.cos(self.theta)*(zc-self.zcenter)
         # construct level set function in computational domain

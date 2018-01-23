@@ -15,8 +15,8 @@
     real(kind=8) :: zlower_ocean, xlower_slope, xlower_shelf, zlower_shelf
     common /topography/ zlower_ocean, xlower_slope, xlower_shelf, zlower_shelf
 
-    real(kind=8) :: fault_shift
-    common /mapping/ fault_shift
+    real(kind=8) :: fault_zshift
+    common /mapping/ fault_zshift
 
     ! Local variables
     real (kind=8) :: ls, tol, x_rot, z_rot, x_floor, z_floor, zc_tmp
@@ -37,12 +37,15 @@
     x_floor = xc
     if (zc > zlower_ocean) then
       z_floor = zc*floor_scale
+    ! elseif (zc < center(2)) then
+    !   z_floor = zc
     else
-      z_floor = zc+floor_shift
+      !z_floor = zc + (zc - center(2))/(zlower_ocean - center(2))*floor_shift
+      z_floor = zc + floor_shift
     end if
 
     ! compute location in grid rotated to line up with fault
-    zc_tmp = zc + fault_shift
+    zc_tmp = zc + fault_zshift
     x_rot = center(1) + dcos(theta)*(xc-center(1)) + dsin(theta)*(zc_tmp-center(2))
     z_rot = center(2) - dsin(theta)*(xc-center(1)) + dcos(theta)*(zc_tmp-center(2))
 

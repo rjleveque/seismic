@@ -28,8 +28,10 @@ def setplot(plotdata):
     fault.read(plotdata.outdir + '/fault.data')
     probdata = ClawData()
     probdata.read(plotdata.outdir + '/setprob.data',force=True)
+    clawdata = ClawData()
+    clawdata.read(plotdata.outdir + '/claw.data', force=True)
 
-    mapping = Mapping(fault, probdata)
+    mapping = Mapping(fault, probdata, clawdata)
     fault_width = mapping.fault_width
     xcenter = mapping.xcenter
     zcenter = mapping.zcenter
@@ -70,8 +72,8 @@ def setplot(plotdata):
         # return vel dot tau, where tau is tangent to fault
         tau_x = (xp2 - xp1)/fault_width
         tau_y = (zp2 - zp1)/fault_width
-        tau_x = np.where(current_data.y+mapping.shift > zcenter, -tau_x, tau_x)
-        tau_y = np.where(current_data.y+mapping.shift > zcenter, -tau_y, tau_y)
+        tau_x = np.where(current_data.y+mapping.fault_zshift > zcenter, -tau_x, tau_x)
+        tau_y = np.where(current_data.y+mapping.fault_zshift > zcenter, -tau_y, tau_y)
         u = current_data.q[3,:,:]
         v = current_data.q[4,:,:]
         return u*tau_x + v*tau_y
@@ -195,15 +197,15 @@ def setplot(plotdata):
     plotaxes.axescmd = 'subplot(211)'
     plotaxes.xlimits = xlimits
     plotaxes.ylimits = zlimits
-    plotaxes.title = 'grid cells'
+    plotaxes.title = 'level 1 cells, level 2 patches'
     plotaxes.scaled = True
     plotaxes.afteraxes = plot_interfaces
 
     # Set up for item on these axes:
     plotitem = plotaxes.new_plotitem(plot_type='2d_patch')
     plotitem.amr_patch_bgcolor = ['#ffeeee', '#eeeeff', '#eeffee', '#ffffff']
-    plotitem.amr_celledges_show = [1]
-    plotitem.amr_patchedges_show = [0]
+    plotitem.amr_celledges_show = [0,1]
+    plotitem.amr_patchedges_show = [1,0]
     plotitem.MappedGrid = True
     plotitem.mapc2p = mapping.mapc2p
 
@@ -212,14 +214,14 @@ def setplot(plotdata):
     plotaxes.axescmd = 'subplot(212)'
     plotaxes.xlimits = xlimitsW
     plotaxes.ylimits = zlimitsW
-    plotaxes.title = 'grid cells'
+    plotaxes.title = 'level 1 cells, level 2 patches'
     plotaxes.scaled = False
 
     # Set up for item on these axes:
     plotitem = plotaxes.new_plotitem(plot_type='2d_patch')
     plotitem.amr_patch_bgcolor = ['#ffeeee', '#eeeeff', '#eeffee', '#ffffff']
-    plotitem.amr_celledges_show = [1]
-    plotitem.amr_patchedges_show = [0]
+    plotitem.amr_celledges_show = [0,1]
+    plotitem.amr_patchedges_show = [1,0]
     plotitem.MappedGrid = True
     plotitem.mapc2p = mapping.mapc2p
 
@@ -259,9 +261,9 @@ def setplot(plotdata):
         # extrapolate displacement from cell centers to top surface:
         eta_slice = 1.5*eta_slice_1 - 0.5*eta_slice_2
 
-        # dont plot redundant levels:
-        if current_data.level == 1:
-            eta_slice = nan*eta_slice
+        # # dont plot redundant levels:
+        # if current_data.level == 1:
+        #     eta_slice = nan*eta_slice
 
         return x_slice, eta_slice
 

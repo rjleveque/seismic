@@ -18,10 +18,11 @@
     real(kind=8) :: zlower_ocean, xlower_slope, xlower_shelf, zlower_shelf
     common /topography/ zlower_ocean, xlower_slope, xlower_shelf, zlower_shelf
 
-    real(kind=8) :: fault_shift
-    common /mapping/ fault_shift
+    real(kind=8) :: fault_zshift
+    common /mapping/ fault_zshift
 
-    real(kind=8) :: xlower, xupper, ylower
+    integer :: nx, ny
+    real(kind=8) :: xlower, xupper, ylower, yupper, dy
 !
 
     fname = 'fault.data'
@@ -53,7 +54,8 @@
 
     read(iunit,*) xlower ! num_dim
     read(iunit,*) xlower, ylower ! lower[0], lower[1]
-    read(iunit,*) xupper ! upper[0]
+    read(iunit,*) xupper, yupper ! upper[0], upper[1]
+    read(iunit,*) nx, ny ! nx, ny
     close(iunit)
 
 !     # Compute ABL position
@@ -62,7 +64,8 @@
     ABLypos = ylower + ABLdepth
 
 !    # Compute vertical shift for computational grid to line up with fault depth
-    fault_shift = center(2) - ceiling(center(2)/zlower_ocean)*zlower_ocean
+    dy = (yupper-ylower)/ny
+    fault_zshift = center(2) + ceiling(-center(2)/dy)*dy
 
 !   # Set material parameters
     lambda_plate = 60.d9  ! Pa
