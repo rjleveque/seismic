@@ -37,11 +37,10 @@
     x_floor = xc
     if (zc > zlower_ocean) then
       z_floor = zc*floor_scale
-    ! elseif (zc < center(2)) then
-    !   z_floor = zc
+    elseif (zc < center(2)) then
+       z_floor = zc
     else
-      !z_floor = zc + (zc - center(2))/(zlower_ocean - center(2))*floor_shift
-      z_floor = zc + floor_shift
+      z_floor = zc + (zc - center(2))/(zlower_ocean - center(2))*floor_shift
     end if
 
     ! compute location in grid rotated to line up with fault

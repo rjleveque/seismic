@@ -68,6 +68,7 @@ def setrun(claw_pkg='amrclaw'):
     probdata.add_param('xlower_shore', xlower_shore, 'x-coord of beginning of shore')
     probdata.add_param('zlower_shore', zlower_shore, 'z-coord of shore')
     probdata.add_param('abl_depth', 30e3, 'depth of absorbing layer')
+    probdata.add_param('fault_zshift', 0.0, 'difference between physical and computational fault depth')
     probdata.add_param('domain_depth', 50e3, 'depth of domain')
     probdata.add_param('domain_width', xupper_domain-xlower_domain, 'width of domain')
 
@@ -102,7 +103,7 @@ def setrun(claw_pkg='amrclaw'):
     clawdata.num_dim = num_dim
 
     # Number of grid cells:
-    num_cells_fault = 40
+    num_cells_fault = 80
 
     # determine cell number and set computational boundaries
     target_dx = fault_width/num_cells_fault
@@ -120,7 +121,9 @@ def setrun(claw_pkg='amrclaw'):
     dz = -zlower_ocean/num_cells_across_ocean
     clawdata.num_cells[1] = int(np.rint(probdata.domain_depth/dz))
     clawdata.lower[1] = -clawdata.num_cells[1]*dz
-    clawdata.upper[1] = zupper_domain = 0.0
+    clawdata.upper[1] = 0.0
+
+    probdata.fault_zshift = -fault_depth + np.ceil(fault_depth/dz)*dz
 
     # add absorbing layer
     target_num_cells = np.rint(probdata.abl_depth/dx)
@@ -174,7 +177,7 @@ def setrun(claw_pkg='amrclaw'):
     # Specify at what times the results should be written to fort.q files.
     # Note that the time integration stops after the final output time.
 
-    clawdata.output_style = 3
+    clawdata.output_style = 1
 
     if clawdata.output_style==1:
         # Output ntimes frames at equally spaced times up to tfinal:
@@ -333,9 +336,9 @@ def setrun(claw_pkg='amrclaw'):
 
     # List of refinement ratios at each level (length at least
     # amr_level_max-1)
-    amrdata.refinement_ratios_x = [4]
-    amrdata.refinement_ratios_y = [4]
-    amrdata.refinement_ratios_t = [4]
+    amrdata.refinement_ratios_x = [2]
+    amrdata.refinement_ratios_y = [2]
+    amrdata.refinement_ratios_t = [2]
 
     # Specify type of each aux variable in amrdata.auxtype.
     # This must be a list of length num_aux, each element of which is one
@@ -369,7 +372,7 @@ def setrun(claw_pkg='amrclaw'):
     # refined)
     # (closer to 1.0 => more small grids may be needed to cover flagged
     # cells)
-    amrdata.clustering_cutoff = 0.7
+    amrdata.clustering_cutoff = 0.99
 
     # print info about each regridding up to this level:
     amrdata.verbosity_regrid = 0
@@ -416,14 +419,19 @@ def setrun(claw_pkg='amrclaw'):
     regions.append([amrdata.amr_levels_max, amrdata.amr_levels_max,
                     0,clawdata.dt_initial,
                     fault_center-0.5*fault_width,fault_center+0.5*fault_width,
-                    -fault_depth-dx, -fault_depth+dx])
+                    -fault_depth-probdata.fault_zshift-dx, -fault_depth-probdata.fault_zshift+dx])
 
-    # Region restriction for water
-    regions.append([1,amrdata.amr_levels_max-1,
-                    0,1e9,
-                    -1e9,1e9,
-                    zlower_ocean - dz * \
-                    amrdata.regrid_buffer_width, 1e9])
+    # Region for shelf (if exists)
+    if (zlower_shelf > zlower_ocean):
+        buffer_width = amrdata.regrid_buffer_width
+        regions.append([amrdata.amr_levels_max, amrdata.amr_levels_max,
+                        0,1e9,
+                        -1e9, 1e9,
+                        -1e9, zlower_ocean - 1.5*buffer_width*dz])
+        regions.append([1,amrdata.amr_levels_max-1, 0,1e9,
+                        -1e9,1e9,
+                        -1e9, 1e9])
+
 
 
     #  ----- For developers -----

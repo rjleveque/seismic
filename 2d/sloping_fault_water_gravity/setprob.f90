@@ -21,7 +21,6 @@
     real(kind=8) :: fault_zshift
     common /mapping/ fault_zshift
 
-    integer :: nx, ny
     real(kind=8) :: xlower, xupper, ylower, yupper, dy
 !
 
@@ -43,6 +42,7 @@
     read(iunit,*) ABLdepth ! xlower_shore
     read(iunit,*) ABLdepth ! zlower_shore
     read(iunit,*) ABLdepth
+    read(iunit,*) fault_zshift
     close(iunit)
 
 
@@ -55,17 +55,12 @@
     read(iunit,*) xlower ! num_dim
     read(iunit,*) xlower, ylower ! lower[0], lower[1]
     read(iunit,*) xupper, yupper ! upper[0], upper[1]
-    read(iunit,*) nx, ny ! nx, ny
     close(iunit)
 
 !     # Compute ABL position
     ABLxpos(1) = xlower + ABLdepth
     ABLxpos(2) = xupper - ABLdepth
     ABLypos = ylower + ABLdepth
-
-!    # Compute vertical shift for computational grid to line up with fault depth
-    dy = (yupper-ylower)/ny
-    fault_zshift = center(2) + ceiling(-center(2)/dy)*dy
 
 !   # Set material parameters
     lambda_plate = 60.d9  ! Pa

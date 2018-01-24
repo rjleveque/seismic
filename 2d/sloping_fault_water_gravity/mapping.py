@@ -68,11 +68,7 @@ class Mapping(Mapping2D):
         self.zlower_ocean = probdata.zlower_ocean
         self.zlower_shelf = probdata.zlower_shelf
         self.zlower_shore = probdata.zlower_shore
-
-        self.fault_zshift = 0.0
-        if (clawdata is not None):
-            dz = (clawdata.upper[1]-clawdata.lower[1])/clawdata.num_cells[1]
-            self.fault_zshift = self.zcenter + np.ceil(-self.zcenter/dz)*dz
+        self.fault_zshift = probdata.fault_zshift
 
     def mapc2p(self,xc,zc):
         """
