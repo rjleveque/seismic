@@ -139,11 +139,11 @@ c        # modified in Version 4.3 to use average only in cqxx, not transverse
 
 c
 c        # second order corrections:
+         cqxx(:,i) = 0.d0
          if ((aux2(3,i-1) > 1.d-10 .and. aux2(3,i) > 1.d-10) .or.
      &       (aux2(3,i-1) < 1.d-10 .and. aux2(3,i) < 1.d-10)) then
 
              do m=1,meqn
-                cqxx(m,i) = 0.d0
                 do mw=1,mwaves
 c
                    if (use_fwaves) then

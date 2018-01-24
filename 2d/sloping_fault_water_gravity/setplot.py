@@ -197,15 +197,15 @@ def setplot(plotdata):
     plotaxes.axescmd = 'subplot(211)'
     plotaxes.xlimits = xlimits
     plotaxes.ylimits = zlimits
-    plotaxes.title = 'level 1 cells, level 2 patches'
+    plotaxes.title = 'level 1 cells, level 2 patches, level 3 cells'
     plotaxes.scaled = True
     plotaxes.afteraxes = plot_interfaces
 
     # Set up for item on these axes:
     plotitem = plotaxes.new_plotitem(plot_type='2d_patch')
     plotitem.amr_patch_bgcolor = ['#ffeeee', '#eeeeff', '#eeffee', '#ffffff']
-    plotitem.amr_celledges_show = [0,1]
-    plotitem.amr_patchedges_show = [1,0]
+    plotitem.amr_celledges_show = [1,0,1]
+    plotitem.amr_patchedges_show = [0,1,0]
     plotitem.MappedGrid = True
     plotitem.mapc2p = mapping.mapc2p
 
@@ -214,14 +214,14 @@ def setplot(plotdata):
     plotaxes.axescmd = 'subplot(212)'
     plotaxes.xlimits = xlimitsW
     plotaxes.ylimits = zlimitsW
-    plotaxes.title = 'level 1 cells, level 2 patches'
+    plotaxes.title = 'level 3 patches'
     plotaxes.scaled = False
 
     # Set up for item on these axes:
     plotitem = plotaxes.new_plotitem(plot_type='2d_patch')
     plotitem.amr_patch_bgcolor = ['#ffeeee', '#eeeeff', '#eeffee', '#ffffff']
-    plotitem.amr_celledges_show = [0,1]
-    plotitem.amr_patchedges_show = [1,0]
+    plotitem.amr_celledges_show = [0]
+    plotitem.amr_patchedges_show = [0,0,1]
     plotitem.MappedGrid = True
     plotitem.mapc2p = mapping.mapc2p
 
@@ -262,8 +262,8 @@ def setplot(plotdata):
         eta_slice = 1.5*eta_slice_1 - 0.5*eta_slice_2
 
         # # dont plot redundant levels:
-        # if current_data.level == 1:
-        #     eta_slice = nan*eta_slice
+        if current_data.level == 1:
+            eta_slice = nan*eta_slice
 
         return x_slice, eta_slice
 

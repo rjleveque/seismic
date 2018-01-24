@@ -103,7 +103,7 @@ def setrun(claw_pkg='amrclaw'):
     clawdata.num_dim = num_dim
 
     # Number of grid cells:
-    num_cells_fault = 10
+    num_cells_fault = 20
 
     # determine cell number and set computational boundaries
     dx = fault_width/num_cells_fault
@@ -115,7 +115,8 @@ def setrun(claw_pkg='amrclaw'):
     clawdata.lower[0] = fault_center-0.5*fault_width - num_cells_below_fault*dx
     clawdata.upper[0] = fault_center+0.5*fault_width + num_cells_above_fault*dx
     # z direction
-    dz = -zlower_ocean
+    num_cells_across_ocean = np.ceil(-zlower_ocean/dx)
+    dz = -zlower_ocean/num_cells_across_ocean
     clawdata.num_cells[1] = int(probdata.domain_depth/dz)
     clawdata.lower[1] = -clawdata.num_cells[1]*dz
     clawdata.upper[1] = 0.0
@@ -329,13 +330,13 @@ def setrun(claw_pkg='amrclaw'):
     amrdata = rundata.amrdata
 
     # max number of refinement levels:
-    amrdata.amr_levels_max = 2
+    amrdata.amr_levels_max = 3
 
     # List of refinement ratios at each level (length at least
     # amr_level_max-1)
-    amrdata.refinement_ratios_x = [4,4]
-    amrdata.refinement_ratios_y = [4,4]
-    amrdata.refinement_ratios_t = [4,4]
+    amrdata.refinement_ratios_x = [8,2]
+    amrdata.refinement_ratios_y = [8,2]
+    amrdata.refinement_ratios_t = [8,2]
 
     # Specify type of each aux variable in amrdata.auxtype.
     # This must be a list of length num_aux, each element of which is one
@@ -369,7 +370,7 @@ def setrun(claw_pkg='amrclaw'):
     # refined)
     # (closer to 1.0 => more small grids may be needed to cover flagged
     # cells)
-    amrdata.clustering_cutoff = 0.99
+    amrdata.clustering_cutoff = 0.7
 
     # print info about each regridding up to this level:
     amrdata.verbosity_regrid = 0
@@ -386,16 +387,15 @@ def setrun(claw_pkg='amrclaw'):
     ngauges = len(xgauges)
 
     # ocean floor:
-    dz_max = dz
-    for j in range(amrdata.amr_levels_max-1):
-        dz_max /= amrdata.refinement_ratios_y[j]
+    dz_level2 = dz/amrdata.refinement_ratios_y[0]
 
     for gaugeno,x in enumerate(xgauges):
-        gauges.append([gaugeno,x,zlower_ocean + 0.5*dz_max,0,1e10])
+        gauges.append([gaugeno,x,zlower_ocean - 0.5*dz_level2,0,1e10])
 
     # ocean surface:
+    dz_level3 = dz_level3/amrdata.refinement_ratios_y[1]
     for gaugeno,x in enumerate(xgauges):
-        gauges.append([ngauges+gaugeno,x,-0.5*dz_max,0,1e10])
+        gauges.append([ngauges+gaugeno,x,-0.5*dz_level3,0,1e10])
 
     # set gauge output increment to match rest of domain
     if clawdata.output_style==1:
@@ -413,7 +413,7 @@ def setrun(claw_pkg='amrclaw'):
     #  [minlevel,maxlevel,t1,t2,x1,x2,y1,y2]
 
     # Region for the fault
-    regions.append([amrdata.amr_levels_max, amrdata.amr_levels_max,
+    regions.append([amrdata.amr_levels_max-1, amrdata.amr_levels_max-1,
                     0,clawdata.dt_initial, #rupture_rise_time,
                     fault_center-0.5*fault_width,fault_center+0.5*fault_width,
                     -fault_depth-dx, -fault_depth+dx])
@@ -427,18 +427,10 @@ def setrun(claw_pkg='amrclaw'):
 
     # Region for shelf (if exists)
     if (zlower_shelf > zlower_ocean):
-        regions.append([amrdata.amr_levels_max, amrdata.amr_levels_max,
+        regions.append([1, amrdata.amr_levels_max-1,
                         0,1e9,
                         -1e9, 1e9,
-                        -1e9, -10e3])
-        regions.append([amrdata.amr_levels_max, amrdata.amr_levels_max,
-                        0,1e9,
-                        -1e9, -60e3,
-                        -1e9, 1e9])
-
-        regions.append([1,amrdata.amr_levels_max-1, 0,1e9,
-                        -1e9,1e9,
-                        -1e9, 1e9])
+                        -1e9, zlower_ocean])
 
 
     #  ----- For developers -----
