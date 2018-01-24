@@ -68,7 +68,7 @@ def setrun(claw_pkg='amrclaw'):
     probdata.add_param('xlower_shore', xlower_shore, 'x-coord of beginning of shore')
     probdata.add_param('zlower_shore', zlower_shore, 'z-coord of shore')
     probdata.add_param('abl_depth', 30e3, 'depth of absorbing layer')
-    probdata.add_param('fault_zshift', 0.0, 'difference between physical and computational fault depth')
+    probdata.add_param('fault_zshift', 0.0, 'vertical shift of comp domain to match fault depth')
     probdata.add_param('domain_depth', 50e3, 'depth of domain')
     probdata.add_param('domain_width', xupper_domain-xlower_domain, 'width of domain')
 
@@ -103,23 +103,20 @@ def setrun(claw_pkg='amrclaw'):
     clawdata.num_dim = num_dim
 
     # Number of grid cells:
-    num_cells_fault = 80
+    num_cells_fault = 10
 
     # determine cell number and set computational boundaries
-    target_dx = fault_width/num_cells_fault
+    dx = fault_width/num_cells_fault
     # x direction
-    num_cells_across_slope = np.ceil((xlower_shelf-xlower_slope)/target_dx)
-    dx = (xlower_shelf-xlower_slope)/num_cells_across_slope
-    num_cells_above_slope = np.ceil((xupper_domain - xlower_shelf)/dx)
+    num_cells_above_fault = np.ceil((xupper_domain - (fault_center+0.5*fault_width))/dx)
     target_num_cells = np.rint(probdata.domain_width/dx)
-    num_cells_below_slope = target_num_cells - num_cells_above_slope - num_cells_across_slope
+    num_cells_below_fault = target_num_cells - num_cells_above_fault - num_cells_fault
     clawdata.num_cells[0] = int(target_num_cells)
-    clawdata.lower[0] = xlower_slope - num_cells_below_slope*dx
-    clawdata.upper[0] = xlower_shelf + num_cells_above_slope*dx
+    clawdata.lower[0] = fault_center-0.5*fault_width - num_cells_below_fault*dx
+    clawdata.upper[0] = fault_center+0.5*fault_width + num_cells_above_fault*dx
     # z direction
-    num_cells_across_ocean = np.ceil(-zlower_ocean/dx)
-    dz = -zlower_ocean/num_cells_across_ocean
-    clawdata.num_cells[1] = int(np.rint(probdata.domain_depth/dz))
+    dz = -zlower_ocean
+    clawdata.num_cells[1] = int(probdata.domain_depth/dz)
     clawdata.lower[1] = -clawdata.num_cells[1]*dz
     clawdata.upper[1] = 0.0
 
@@ -193,8 +190,8 @@ def setrun(claw_pkg='amrclaw'):
 
     elif clawdata.output_style == 3:
         # Output every step_interval timesteps over total_steps timesteps:
-        clawdata.output_step_interval = 10
-        clawdata.total_steps = 100
+        clawdata.output_step_interval = 1
+        clawdata.total_steps = 10
         clawdata.output_t0 = True  # output at initial (or restart) time?
 
 
@@ -336,9 +333,9 @@ def setrun(claw_pkg='amrclaw'):
 
     # List of refinement ratios at each level (length at least
     # amr_level_max-1)
-    amrdata.refinement_ratios_x = [2]
-    amrdata.refinement_ratios_y = [2]
-    amrdata.refinement_ratios_t = [2]
+    amrdata.refinement_ratios_x = [4,4]
+    amrdata.refinement_ratios_y = [4,4]
+    amrdata.refinement_ratios_t = [4,4]
 
     # Specify type of each aux variable in amrdata.auxtype.
     # This must be a list of length num_aux, each element of which is one
@@ -394,7 +391,7 @@ def setrun(claw_pkg='amrclaw'):
         dz_max /= amrdata.refinement_ratios_y[j]
 
     for gaugeno,x in enumerate(xgauges):
-        gauges.append([gaugeno,x,zlower_ocean - 0.5*dz_max,0,1e10])
+        gauges.append([gaugeno,x,zlower_ocean + 0.5*dz_max,0,1e10])
 
     # ocean surface:
     for gaugeno,x in enumerate(xgauges):
@@ -417,21 +414,31 @@ def setrun(claw_pkg='amrclaw'):
 
     # Region for the fault
     regions.append([amrdata.amr_levels_max, amrdata.amr_levels_max,
-                    0,clawdata.dt_initial,
+                    0,clawdata.dt_initial, #rupture_rise_time,
                     fault_center-0.5*fault_width,fault_center+0.5*fault_width,
-                    -fault_depth-probdata.fault_zshift-dx, -fault_depth-probdata.fault_zshift+dx])
+                    -fault_depth-dx, -fault_depth+dx])
+
+    # Debug
+    # regions.append([1,amrdata.amr_levels_max-1,
+    #                 0,1e9,
+    #                 -1e9,1e9,
+    #                 zlower_ocean,1e9])
+
 
     # Region for shelf (if exists)
     if (zlower_shelf > zlower_ocean):
-        buffer_width = amrdata.regrid_buffer_width
         regions.append([amrdata.amr_levels_max, amrdata.amr_levels_max,
                         0,1e9,
                         -1e9, 1e9,
-                        -1e9, zlower_ocean - 1.5*buffer_width*dz])
+                        -1e9, -10e3])
+        regions.append([amrdata.amr_levels_max, amrdata.amr_levels_max,
+                        0,1e9,
+                        -1e9, -60e3,
+                        -1e9, 1e9])
+
         regions.append([1,amrdata.amr_levels_max-1, 0,1e9,
                         -1e9,1e9,
                         -1e9, 1e9])
-
 
 
     #  ----- For developers -----
