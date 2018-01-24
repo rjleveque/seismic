@@ -227,12 +227,13 @@ def setplot(plotdata):
 
 
     # Figure for surface displacement
-    plotfigure = plotdata.new_plotfigure(name='surface displacement', figno=4)
+    plotfigure = plotdata.new_plotfigure(name='displacements', figno=4)
 
     # Set up for axes in this figure:
     plotaxes = plotfigure.new_plotaxes()
+    plotaxes.axescmd = 'subplot(211)'
     #plotaxes.xlimits = [0,2]
-    plotaxes.ylimits = [-1.5,1.5]
+    plotaxes.ylimits = [-0.5,0.5]
     plotaxes.title = 'surface displacement'
 
     def fixup(current_data):
@@ -243,7 +244,7 @@ def setplot(plotdata):
     plotitem = plotaxes.new_plotitem(plot_type='1d_from_2d_data')
     #plotitem.show = False
 
-    def xsec(current_data):
+    def xsec_surface(current_data):
         # Return x value and surface eta at this point, along y=0
         from pylab import find,ravel,nan
         x = current_data.x
@@ -262,15 +263,61 @@ def setplot(plotdata):
         eta_slice = 1.5*eta_slice_1 - 0.5*eta_slice_2
 
         # # dont plot redundant levels:
-        if current_data.level == 1:
+        if current_data.level < 3:
             eta_slice = nan*eta_slice
 
         return x_slice, eta_slice
 
-    plotitem.map_2d_to_1d = xsec
+    plotitem.map_2d_to_1d = xsec_surface
     plotitem.plotstyle = 'b-'     ## need to be able to set amr_plotstyle
     plotitem.kwargs = {'markersize':5}
     plotitem.amr_data_show = [1]
+
+    # Set up for axes in this figure:
+    plotaxes = plotfigure.new_plotaxes()
+    plotaxes.axescmd = 'subplot(212)'
+    #plotaxes.xlimits = [0,2]
+    plotaxes.ylimits = [-0.5,0.5]
+    plotaxes.title = 'floor displacement'
+
+    def fixup(current_data):
+        from pylab import grid
+        grid(True)
+    plotaxes.afteraxes = fixup
+
+    plotitem = plotaxes.new_plotitem(plot_type='1d_from_2d_data')
+    #plotitem.show = False
+
+    def xsec_floor(current_data):
+        # Return x value and surface eta at this point, along y=0
+        from pylab import find,ravel,nan
+        x = current_data.x
+        y = current_data.y
+        dy = current_data.dy
+        q = current_data.q
+        zfloor = mapping.zlower_ocean
+
+        ij = find((y <= zfloor) & (y > zfloor-dy))
+        x_slice = ravel(x)[ij]
+        eta_slice_1 = ravel(q[5,:,:])[ij]
+
+        ij = find((y <= zfloor-dy) & (y > zfloor-2*dy))
+        eta_slice_2 = ravel(q[5,:,:])[ij]
+
+        # extrapolate displacement from cell centers to top surface:
+        eta_slice = 1.5*eta_slice_1 - 0.5*eta_slice_2
+
+        # # dont plot redundant levels:
+        if current_data.level < 2:
+            eta_slice = nan*eta_slice
+
+        return x_slice, eta_slice
+
+    plotitem.map_2d_to_1d = xsec_floor
+    plotitem.plotstyle = 'b-'     ## need to be able to set amr_plotstyle
+    plotitem.kwargs = {'markersize':5}
+    plotitem.amr_data_show = [1]
+
 
 
     #-----------------------------------------
