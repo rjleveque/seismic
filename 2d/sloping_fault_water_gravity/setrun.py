@@ -393,7 +393,7 @@ def setrun(claw_pkg='amrclaw'):
         gauges.append([gaugeno,x,zlower_ocean - 0.5*dz_level2,0,1e10])
 
     # ocean surface:
-    dz_level3 = dz_level3/amrdata.refinement_ratios_y[1]
+    dz_level3 = dz_level2/amrdata.refinement_ratios_y[1]
     for gaugeno,x in enumerate(xgauges):
         gauges.append([ngauges+gaugeno,x,-0.5*dz_level3,0,1e10])
 
