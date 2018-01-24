@@ -56,7 +56,7 @@ SOURCES = \
   bc2amr.f \
   setaux.f \
   src2.f90 \
-  rpn2_vc_elasticity.f90 \
+  rpn2_vc_elasticity_fault.f90 \
   rpt2_vc_elasticity.f90 \
   $(AMRLIB)/cellave.f \
   $(AMRLIB)/fss.f \
