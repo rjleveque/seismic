@@ -44,8 +44,6 @@ def setrun(claw_pkg='amrclaw'):
     probdata.add_param('rho2',  2500.0,  'density in bottom layer (kg/m**3)')
     probdata.add_param('lam2',   60.e9,  'lambda in bottom layer (Pa)')
     probdata.add_param('mu2',    30.e9, 'mu in bottom layer (Pa)')
-    probdata.add_param('t0wall',    0.2,  'time duration of force')
-    probdata.add_param('amplitude',  1.e8,  'max amplitude of force')
     
     #------------------------------------------------------------------
     # Standard Clawpack parameters to be written to claw.data:
@@ -80,7 +78,7 @@ def setrun(claw_pkg='amrclaw'):
     clawdata.num_eqn = 6   # includes displacement delta 
 
     # Number of auxiliary variables in the aux array (initialized in setaux)
-    clawdata.num_aux = 5
+    clawdata.num_aux = 6
     
     # Index of aux array corresponding to capacity function, if there is one:
     clawdata.capa_index = 0
@@ -111,13 +109,13 @@ def setrun(claw_pkg='amrclaw'):
     # Specify at what times the results should be written to fort.q files.
     # Note that the time integration stops after the final output time.
  
-    clawdata.output_style = 1
+    clawdata.output_style = 3
  
     if clawdata.output_style==1:
         # Output ntimes frames at equally spaced times up to tfinal:
         # Can specify num_output_times = 0 for no output
-        clawdata.num_output_times = 200
-        clawdata.tfinal = 1000.
+        clawdata.num_output_times = 40
+        clawdata.tfinal = 100.
         clawdata.output_t0 = True  # output at initial (or restart) time?
         
     elif clawdata.output_style == 2:
@@ -127,8 +125,8 @@ def setrun(claw_pkg='amrclaw'):
  
     elif clawdata.output_style == 3:
         # Output every step_interval timesteps over total_steps timesteps:
-        clawdata.output_step_interval = 1
-        clawdata.total_steps = 10
+        clawdata.output_step_interval = 2
+        clawdata.total_steps = 50
         clawdata.output_t0 = True  # output at initial (or restart) time?
         
 
@@ -229,7 +227,7 @@ def setrun(claw_pkg='amrclaw'):
     clawdata.bc_lower[0] = 'extrap'   # at xlower
     clawdata.bc_upper[0] = 'extrap'   # at xupper
 
-    clawdata.bc_lower[1] = 'user'   # at ylower
+    clawdata.bc_lower[1] = 'extrap'   # at ylower
     clawdata.bc_upper[1] = 'user'   # at yupper
                   
 
@@ -295,7 +293,7 @@ def setrun(claw_pkg='amrclaw'):
     # This must be a list of length num_aux, each element of which is one
     # of:
     #   'center',  'capacity', 'xleft', or 'yleft'  (see documentation).
-    amrdata.aux_type = ['center','center','center','center','center']
+    amrdata.aux_type = ['center','center','center','center','center','xleft']
 
 
     # Flag for refinement based on Richardson error estimater:

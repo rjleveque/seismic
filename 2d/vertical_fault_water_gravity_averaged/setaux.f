@@ -9,6 +9,7 @@ c     #  aux(2,i,j) = lambda in (i,j) cell
 c     #  aux(3,i,j) = mu in (i,j) cell
 c     #  aux(4,i,j) = cp in (i,j) cell
 c     #  aux(5,i,j) = cs in (i,j) cell
+c     #  aux(6,i,j) = slip across fault
 c
 c     # Piecewise constant medium
 c     # Material parameters are set in setprob.f
@@ -16,9 +17,10 @@ c     # Material parameters are set in setprob.f
 c
 c     
       implicit double precision (a-h,o-z)
-      dimension aux(5,1-mbc:mx+mbc,1-mbc:my+mbc)
+      dimension aux(maux,1-mbc:mx+mbc,1-mbc:my+mbc)
       common /comaux/ rho1,amu1,alam1,rho2,amu2,alam2
 
+      aux(6,:,:) = 0.d0   ! set in b4step2 each time step
 
       do 30 j=1-mbc,my+mbc
        do 20 i=1-mbc,mx+mbc

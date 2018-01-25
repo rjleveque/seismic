@@ -85,14 +85,11 @@ c ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::;
       integer nxl,nxr,ibeg,nyb,nyt,jbeg,i,j,m
       
       real*8 s, xcell
-      real*8 t0wall,pi2,amplitude 
       real*8  x, p_atm, p_water, h_top, p_ambient, dist
       real*8  t_moving_bottom, x1, pi, ampl
       real*8  rho,bulk,cc,zz,g
       real*8  tfactor, zfinal, width
 
-      ! needed for stress at top boundary:
-      common /combc/ t0wall,pi2,amplitude
 
       g = 9.81d0
 

@@ -5,7 +5,7 @@ subroutine rpn2(ixy,maxm,meqn,mwaves,maux,mbc,mx,ql,qr,auxl,auxr,wave,s,amdq,apd
 !
 ! waves: 4
 ! equations: 6  with vertical displacement
-! aux fields: 5
+! aux fields: 6 with fault slip
 
 ! Conserved quantities:
 !       1 sigma_11
@@ -21,6 +21,7 @@ subroutine rpn2(ixy,maxm,meqn,mwaves,maux,mbc,mx,ql,qr,auxl,auxr,wave,s,amdq,apd
 !       3  mu
 !       4  cp
 !       5  cs
+!       6  fault slip
 
 ! Note that although there are 5 eigenvectors, one eigenvalue
 ! is always zero and so we only need to compute 4 waves.	
@@ -69,6 +70,7 @@ subroutine rpn2(ixy,maxm,meqn,mwaves,maux,mbc,mx,ql,qr,auxl,auxr,wave,s,amdq,apd
     double precision :: alamr, amur, bulkr, cpr, csr
     double precision :: alaml, amul, bulkl, cpl, csl
     double precision :: det, a1, a2, a3, a4
+    double precision :: slip
 
     ! set ku to point to  the component of the system that corresponds
     ! to velocity in the direction of this slice, kv to the orthogonal
@@ -129,7 +131,14 @@ subroutine rpn2(ixy,maxm,meqn,mwaves,maux,mbc,mx,ql,qr,auxl,auxr,wave,s,amdq,apd
         a2 = (cpl*dsig11 - bulkl*du) / det
 
         ! S-wave strengths:
+
+        slip = auxl(6,i)
+            
         det = amul*csr + amur*csl
+        if (abs(det) < 1.d-10 .and. slip > 0) then
+            write(6,*) '*** Should not have nonzero slip in water!'
+            stop
+            endif
 
 !       if (det.eq.0.d0) then
 !           ! no s-waves
@@ -143,8 +152,14 @@ subroutine rpn2(ixy,maxm,meqn,mwaves,maux,mbc,mx,ql,qr,auxl,auxr,wave,s,amdq,apd
       ! properly handle case when mu is 0 only on one side of interface:
       if (det > 1.d-10) then
         ! internal rock interface
-        a3 = (csr*dsig12 + amur*dv) / det
-        a4 = (csl*dsig12 - amul*dv) / det
+        if (ixy == 1 .and. dabs(slip) > 1.d-10) then
+            ! fault slip across vertical fault, q(5) = v velocity
+            a3 = (qr(5,i-1) - 0.5d0*slip) / csl
+            a4 = (ql(5,i) + 0.5d0*slip) / csr
+          else
+            a3 = (csr*dsig12 + amur*dv) / det
+            a4 = (csl*dsig12 - amul*dv) / det
+          endif
       elseif (amul > 1.d-10 .and. amur < 1.d-10) then
         ! interface between rock and water
         !a3 = -dv / csl ! no-slip (continuity of tangential velocity)

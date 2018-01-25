@@ -26,6 +26,7 @@ subroutine rpt2(ixy,imp,maxm,meqn,mwaves,maux,mbc,mx,ql,qr,aux1,aux2,aux3,asdq,b
 !     #  auxN(3,i) = mu
 !     #  auxN(4,i) = cp 
 !     #  auxN(5,i) = cs
+!     #  auxN(6,i) = slip
 !
 !
 !
@@ -103,6 +104,10 @@ subroutine rpt2(ixy,imp,maxm,meqn,mwaves,maux,mbc,mx,ql,qr,aux1,aux2,aux3,asdq,b
          bulkm = alamm + 2.d0*amum
          bulk  = alam  + 2.d0*amu 
          bulkp = alamp + 2.d0*amup
+
+!        # slip:
+         slipm = aux2(6,i1)
+         slipp = aux3(6,i1)
      
 !        # P-wave and S-wave speeds in each row of cells:
          cpm = aux1(4,i1)
@@ -137,6 +142,9 @@ subroutine rpt2(ixy,imp,maxm,meqn,mwaves,maux,mbc,mx,ql,qr,aux1,aux2,aux3,asdq,b
              a3 = (cs*dsig12 + amu*du) / det
          endif
 
+!        # no shear wave propagation across fault:
+         if (ixy==2 .and. dabs(slipm) > 1.d-10) a3 = 0.d0
+
 !        # transmitted part of up-going S-wave:
          det = -(amu*csp + amup*cs)
          if (det .eq. 0.d0) then
@@ -144,6 +152,9 @@ subroutine rpt2(ixy,imp,maxm,meqn,mwaves,maux,mbc,mx,ql,qr,aux1,aux2,aux3,asdq,b
          else
              a4 = (cs*dsig12 - amu*du) / det
          endif
+
+!        # no shear wave propagation across fault:
+         if (ixy==2 .and. dabs(slipp) > 1.d-10) a4 = 0.d0
 !
 !        # The down-going flux difference bmasdq is the product  -c * wave
 !        # summed over down-going P-wave and S-wave:

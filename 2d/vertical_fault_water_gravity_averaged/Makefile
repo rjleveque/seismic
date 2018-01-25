@@ -32,6 +32,8 @@ FFLAGS ?=
 
 AMRLIB = $(CLAW)/amrclaw/src/2d
 include $(AMRLIB)/Makefile.amr_2d
+SEISLIB = $(CLAW)/seismic/src/2d
+
 
 # ---------------------------------------
 # package sources specifically to exclude
@@ -48,16 +50,19 @@ EXCLUDE_SOURCES = \
 # ----------------------------------------
 
 MODULES = \
+    fault_module.f90
 
 SOURCES = \
   qinit.f \
-  setprob.f \
+  setprob.f90 \
   fdisc.f \
   bc2amr.f \
   setaux.f \
   src2.f90 \
+  b4step2.f90 \
+  $(SEISLIB)/tick.f \
   rpn2_vc_elasticity_fault.f90 \
-  rpt2_vc_elasticity.f90 \
+  rpt2_vc_elasticity_fault.f90 \
   $(AMRLIB)/cellave.f \
   $(AMRLIB)/fss.f \
   $(AMRLIB)/zeroin.f \
