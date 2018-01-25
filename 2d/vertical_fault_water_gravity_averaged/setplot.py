@@ -24,7 +24,7 @@ ybot = -h0
 x0_slope = 50e3
 x0_shelf = 100e3
 z0_ocean = -h0
-z0_shelf = -2500.
+z0_shelf = z0_ocean #flat   -2500.
 
 def zbottom(x):
     #ybottom = -10000. + 6000*(x+40e3)/80e3
@@ -156,8 +156,8 @@ def setplot(plotdata):
     plotitem = plotaxes.new_plotitem(plot_type='2d_pcolor')
     plotitem.plot_var = 5 #2
     plotitem.pcolor_cmap = colormaps.blue_white_red
-    plotitem.pcolor_cmin = -5. #-csig
-    plotitem.pcolor_cmax =  5. #csig
+    plotitem.pcolor_cmin = -1000. #-5. #-csig
+    plotitem.pcolor_cmax =  1000. #5. #csig
     plotitem.add_colorbar = True
     plotitem.colorbar_shrink = 0.7
     plotitem.amr_celledges_show = [False]

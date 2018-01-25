@@ -38,9 +38,11 @@ subroutine b4step2(mbc,mx,my,meqn,q,xlower,ylower,dx,dy,t,dt,maux,aux)
                     ycell <= subfaults(k)%ycb(2) .and. &
                     subfaults(k)%rupture_time <= t .and. &
                     t <= subfaults(k)%rupture_time + subfaults(k)%rise_time) then
+
                   aux(6,i,j) = subfaults(k)%slip/subfaults(k)%rise_time
+
                   !write(6,*) '+++ xcell, ycell, slip: ',xcell,ycell, &
-                            !subfaults(k)%slip
+                  !          aux(6,i,j)
 
                   exit
                 end if

@@ -21,7 +21,7 @@ c     # fdisc is positive in the lower layer, negative in upper
       x0_slope = 50d3
       x0_shelf = 100d3
       z0_ocean = -4500.d0
-      z0_shelf = -2500.d0
+      z0_shelf = z0_ocean !flat   -2500.d0
       ybottom = -4500.d0
       slope_of_slope = (z0_ocean - z0_shelf) / (x0_slope - x0_shelf)
       ybottom = z0_ocean

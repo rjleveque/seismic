@@ -126,7 +126,7 @@ def setrun(claw_pkg='amrclaw'):
     elif clawdata.output_style == 3:
         # Output every step_interval timesteps over total_steps timesteps:
         clawdata.output_step_interval = 2
-        clawdata.total_steps = 50
+        clawdata.total_steps = 40
         clawdata.output_t0 = True  # output at initial (or restart) time?
         
 
