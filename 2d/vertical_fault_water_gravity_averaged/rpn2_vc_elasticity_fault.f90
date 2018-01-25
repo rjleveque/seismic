@@ -154,8 +154,8 @@ subroutine rpn2(ixy,maxm,meqn,mwaves,maux,mbc,mx,ql,qr,auxl,auxr,wave,s,amdq,apd
         ! internal rock interface
         if (ixy == 1 .and. dabs(slip) > 1.d-10) then
             ! fault slip across vertical fault, q(5) = v velocity
-            a3 = (qr(5,i-1) - 0.5d0*slip) / csl
-            a4 = (ql(5,i) + 0.5d0*slip) / csr
+            a3 = -(qr(5,i-1) + 0.5d0*slip) / csl
+            a4 = -(ql(5,i) - 0.5d0*slip) / csr
           else
             a3 = (csr*dsig12 + amur*dv) / det
             a4 = (csl*dsig12 - amul*dv) / det
