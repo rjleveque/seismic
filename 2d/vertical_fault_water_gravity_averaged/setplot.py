@@ -8,6 +8,8 @@ function setplot is called to set the plot parameters.
 """ 
 
 import numpy as np
+import sys
+sys.path.insert(0,'..')
 
 csig = 10
 cdivcurl = 1e-6
@@ -40,6 +42,16 @@ def plot_interfaces(current_data):
     from pylab import linspace, plot
     x = linspace(-200e3, 200e3, 101)
     plot(x, zbottom(x), 'k')
+
+#--- Okada:
+
+import setfault
+reload(setfault)
+fault = setfault.make_fault()
+times = [1000.]  # after fault motion complete
+x = np.linspace(-2,2,1000)
+y = np.array([0,1])
+dtopo = fault.create_dtopography(x,y,times)
 
 
 #--------------------------
@@ -156,8 +168,8 @@ def setplot(plotdata):
     plotitem = plotaxes.new_plotitem(plot_type='2d_pcolor')
     plotitem.plot_var = 5 #2
     plotitem.pcolor_cmap = colormaps.blue_white_red
-    plotitem.pcolor_cmin = -1000. #-5. #-csig
-    plotitem.pcolor_cmax =  1000. #5. #csig
+    plotitem.pcolor_cmin = -0.1 #-csig
+    plotitem.pcolor_cmax =  0.1 #csig
     plotitem.add_colorbar = True
     plotitem.colorbar_shrink = 0.7
     plotitem.amr_celledges_show = [False]
@@ -183,8 +195,31 @@ def setplot(plotdata):
     plotitem.amr_patchedges_show = [0]
 
 
+    # Figure for u-velocity:
+    plotaxes = plotfigure.new_plotaxes()
+    #plotaxes.show = False
+    plotaxes.axescmd = 'axes([.5,.1,.45,.35])' # 'subplot(224)'
+    #plotaxes.xlimits = [0,2]
+    #plotaxes.ylimits = [0,1]
+    plotaxes.title = 'u-velocity'
+    plotaxes.scaled = False
+    plotaxes.afteraxes = plot_interfaces
+
+    # Set up for item on these axes:
+    plotitem = plotaxes.new_plotitem(plot_type='2d_pcolor')
+    plotitem.plot_var = 3
+    plotitem.pcolor_cmap = colormaps.blue_white_red
+    plotitem.pcolor_cmin = -0.002
+    plotitem.pcolor_cmax = 0.002
+    plotitem.add_colorbar = True
+    plotitem.colorbar_shrink = 0.7
+    plotitem.amr_celledges_show = [False]
+    plotitem.amr_patchedges_show = [0]
+
+
     # Figure for curl:
     plotaxes = plotfigure.new_plotaxes()
+    plotaxes.show = False
     plotaxes.axescmd = 'axes([.5,.1,.45,.35])' # 'subplot(224)'
     #plotaxes.xlimits = [0,2]
     #plotaxes.ylimits = [0,1]
@@ -211,8 +246,8 @@ def setplot(plotdata):
     # Set up for axes in this figure:
     plotaxes = plotfigure.new_plotaxes()
     #plotaxes.xlimits = [0,2]
-    plotaxes.ylimits = [-15,15]
-    plotaxes.title = 'surface displacement'
+    plotaxes.ylimits = [-0.8,0.8]
+    plotaxes.title = 'surface/bottom displacement'
     
     plotitem = plotaxes.new_plotitem(plot_type='1d_from_2d_data')
     #plotitem.show = False
@@ -320,7 +355,8 @@ def setplot(plotdata):
         delta_bottom = gridtools.grid_output(framesoln, 5, xout, yout)
         pressure = -gridtools.grid_output(framesoln, 0, xout, yout)
         pdiff = pressure  / rhog - delta_bottom
-        plot(xout, pdiff, 'r')
+        #plot(xout, pdiff, 'r')
+        plot(111e3*dtopo.X[0,:],dtopo.dZ[-1,0,:],'m')
         plot(xout, delta_bottom, 'g')
         #import pdb; pdb.set_trace()
 
@@ -335,8 +371,8 @@ def setplot(plotdata):
         #          'bottom pressure diff']
         #colors = ['b','g','r']
         labels = ['surface displacement','bottom displacement',
-                  'bottom pressure diff']
-        colors = ['b','g','r']
+                  'Okada final']
+        colors = ['b','g','m']
         linestyles = '-'
         markers = ''
         legend_tools.add_legend(labels,colors,linestyles,markers,

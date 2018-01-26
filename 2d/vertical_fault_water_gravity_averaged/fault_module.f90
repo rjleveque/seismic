@@ -126,8 +126,10 @@ contains
           subfaults(i)%xcb(1) = xcb(1) 
           subfaults(i)%xcb(2) = xcb(2)
           ! for vertical fault:
-          subfaults(i)%ycb(1) = ycb(1)
-          subfaults(i)%ycb(2) = ycb(2)
+          subfaults(i)%ycb(2) = ycb(2) - (i-1)*subfaults(i)%width
+          subfaults(i)%ycb(1) = ycb(2) - i*subfaults(i)%width
+          write(6,*) '+++ subfault i, ycb1, ybc2: ', &
+                i,subfaults(i)%ycb(1),subfaults(i)%ycb(2)
         end do
 
     end subroutine load_fault
