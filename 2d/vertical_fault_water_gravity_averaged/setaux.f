@@ -26,7 +26,9 @@ c
        do 20 i=1-mbc,mx+mbc
           xl = xlower + (i-1.0d0)*dx
           yl = ylower + (j-1.0d0)*dy
+!$OMP     CRITICAL (cellave_fss)
           call cellave(xl,yl,dx,dy,w1)
+!$OMP     END CRITICAL (cellave_fss)
           w2 = 1.d0 - w1
 
           aux(1,i,j) = w1*rho1 + w2*rho2

@@ -26,7 +26,8 @@ ybot = -h0
 x0_slope = 50e3
 x0_shelf = 100e3
 z0_ocean = -h0
-z0_shelf = z0_ocean #flat   -2500.
+#z0_shelf = z0_ocean !flat
+z0_shelf = -2500.0
 
 def zbottom(x):
     #ybottom = -10000. + 6000*(x+40e3)/80e3
