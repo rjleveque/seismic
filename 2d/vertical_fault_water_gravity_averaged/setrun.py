@@ -44,6 +44,7 @@ def setrun(claw_pkg='amrclaw'):
     probdata.add_param('rho2',  2500.0,  'density in bottom layer (kg/m**3)')
     probdata.add_param('lam2',   60.e9,  'lambda in bottom layer (Pa)')
     probdata.add_param('mu2',    30.e9, 'mu in bottom layer (Pa)')
+    probdata.add_param('abl_depth', 30e3, 'depth of absorbing layer')
     
     #------------------------------------------------------------------
     # Standard Clawpack parameters to be written to claw.data:
@@ -60,14 +61,14 @@ def setrun(claw_pkg='amrclaw'):
     clawdata.num_dim = num_dim
     
     # Lower and upper edge of computational domain:
-    clawdata.lower[0] = -400e3       # xlower
-    clawdata.upper[0] = 400e3        # xupper
+    clawdata.lower[0] = -100e3 #-230e3       # xlower
+    clawdata.upper[0] =  100e3 #230e3        # xupper
     clawdata.lower[1] = -60e3        # ylower
     clawdata.upper[1] = 0.0          # yupper
     
     # Number of grid cells:
-    clawdata.num_cells[0] = 80      # mx
-    clawdata.num_cells[1] = 60     # my
+    clawdata.num_cells[0] = 50 #115     # mx
+    clawdata.num_cells[1] = 30     # my
     
 
     # ---------------
@@ -78,7 +79,7 @@ def setrun(claw_pkg='amrclaw'):
     clawdata.num_eqn = 6   # includes displacement delta 
 
     # Number of auxiliary variables in the aux array (initialized in setaux)
-    clawdata.num_aux = 6
+    clawdata.num_aux = 8
     
     # Index of aux array corresponding to capacity function, if there is one:
     clawdata.capa_index = 0
@@ -115,7 +116,7 @@ def setrun(claw_pkg='amrclaw'):
         # Output ntimes frames at equally spaced times up to tfinal:
         # Can specify num_output_times = 0 for no output
         clawdata.num_output_times = 50
-        clawdata.tfinal = 400.
+        clawdata.tfinal = 100.
         clawdata.output_t0 = True  # output at initial (or restart) time?
         
     elif clawdata.output_style == 2:
@@ -297,7 +298,8 @@ def setrun(claw_pkg='amrclaw'):
     # This must be a list of length num_aux, each element of which is one
     # of:
     #   'center',  'capacity', 'xleft', or 'yleft'  (see documentation).
-    amrdata.aux_type = ['center','center','center','center','center','xleft']
+    amrdata.aux_type = ['center','center','center','center','center',
+                        'xleft','xleft','yleft']
 
 
     # Flag for refinement based on Richardson error estimater:
@@ -334,11 +336,12 @@ def setrun(claw_pkg='amrclaw'):
     regions = rundata.regiondata.regions 
     # to specify regions of refinement append lines of the form
     #  [minlevel,maxlevel,t1,t2,x1,x2,y1,y2]
-    regions.append([1,1,0,1e9,-1000e3,1000e3,-100e3,0])  # whole domain, all time
+    #regions.append([1,1,0,1e9,-1000e3,1000e3,-100e3,0])  # whole domain, all time
+    regions.append([1,3,0,1e9,-1000e3,1000e3,-100e3,0])  # whole domain, all time
     regions.append([1,4,0,50,-20e3,20e3,-30e3,0])  # fault region, short time
-    regions.append([1,3,0,1e9,-100e3,100e3,-25e3,0])  # inner region, all time
-    #regions.append([1,3,0,50,-100e3,100e3,-25e3,0])  # inner region, medium t
-    regions.append([1,4,0,1e9,-100e3,100e3,-5e3,0])  # inner water layer, all time
+    regions.append([1,3,0,1e9,-200e3,200e3,-35e3,0])  # inner region, all time
+    #regions.append([1,3,0,50,-200e3,200e3,-25e3,0])  # inner region, medium t
+    regions.append([1,4,0,1e9,-200e3,200e3,-5e3,0])  # inner water layer, all time
 
 
 

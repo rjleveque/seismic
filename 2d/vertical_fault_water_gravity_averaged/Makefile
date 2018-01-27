@@ -61,8 +61,8 @@ SOURCES = \
   src2.f90 \
   b4step2.f90 \
   $(SEISLIB)/tick.f \
-  rpn2_vc_elasticity_fault.f90 \
-  rpt2_vc_elasticity_fault.f90 \
+  rpn2_vc_elasticity_vfault_abl.f90 \
+  rpt2_vc_elasticity_vfault_abl.f90 \
   $(AMRLIB)/cellave.f \
   $(AMRLIB)/fss.f \
   $(AMRLIB)/zeroin.f \

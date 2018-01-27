@@ -27,6 +27,8 @@ subroutine rpt2(ixy,imp,maxm,meqn,mwaves,maux,mbc,mx,ql,qr,aux1,aux2,aux3,asdq,b
 !     #  auxN(4,i) = cp 
 !     #  auxN(5,i) = cs
 !     #  auxN(6,i) = slip
+!     #  auxN(7,i) = stretch in x for ABL
+!     #  auxN(8,i) = stretch in y for ABL
 !
 !
 !
@@ -176,6 +178,13 @@ subroutine rpt2(ixy,imp,maxm,meqn,mwaves,maux,mbc,mx,ql,qr,aux1,aux2,aux3,asdq,b
          bpasdq(kv,i) =      cpp*a2*(-cpp)
          bpasdq(6,i) =      0.d0
 !
+
+!        # adjust speeds for absorbing layer:
+         do m=1,6
+            bmasdq(m,i) = bmasdq(m,i) * aux2(9-ixy,i1)
+            bpasdq(m,i) = bpasdq(m,i) * aux3(9-ixy,i1)
+            enddo
+
       enddo
 !
       return

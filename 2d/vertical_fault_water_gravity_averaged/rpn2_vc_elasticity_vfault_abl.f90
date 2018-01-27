@@ -65,7 +65,7 @@ subroutine rpn2(ixy,maxm,meqn,mwaves,maux,mbc,mx,ql,qr,auxl,auxr,wave,s,amdq,apd
     dimension auxl(maux, 1-mbc:maxm+mbc)
     dimension auxr(maux, 1-mbc:maxm+mbc)
 
-    integer :: ksig11, ksig22, ku, kv, i, m
+    integer :: ksig11, ksig22, ku, kv, i, m, mw
     double precision :: dsig11, dsig22, dsig12, du, dv
     double precision :: alamr, amur, bulkr, cpr, csr
     double precision :: alaml, amul, bulkl, cpl, csl
@@ -214,6 +214,10 @@ subroutine rpn2(ixy,maxm,meqn,mwaves,maux,mbc,mx,ql,qr,auxl,auxr,wave,s,amdq,apd
 
         wave(6,:,i) = 0.d0   ! delta updated in src2
     
+        ! Adjust for absorbing layer
+        do mw=1,mwaves
+          s(mw,i) = s(mw,i)*auxl(6+ixy,i)
+        end do
 
         ! compute the leftgoing and rightgoing flux differences:
         ! Note s(i,1),s(i,3) < 0   and   s(i,2),s(i,4) > 0.

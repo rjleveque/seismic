@@ -3,6 +3,7 @@
 !   ==================
 
     use fault_module, only: load_fault, center
+    use amr_module, only: xlower,xupper,ylower
 
     implicit none
 
@@ -10,8 +11,10 @@
     integer iunit
 
     real(kind=8) :: rho1,amu1,alam1,rho2,amu2,alam2
+    real(kind=8) :: ABLdepth, ABLxpos(2), ABLypos
 
-      common /comaux/ rho1,amu1,alam1,rho2,amu2,alam2
+    common /comaux/ rho1,amu1,alam1,rho2,amu2,alam2
+    common /ablparam/ ABLdepth, ABLxpos, ABLypos
 
 !
 !     # fault parameters:
@@ -39,6 +42,15 @@
       read(7,*) rho2
       read(7,*) alam2
       read(7,*) amu2
+
+      read(7,*) ABLdepth
+
+!     # Compute ABL position
+      ABLxpos(1) = xlower + ABLdepth
+      ABLxpos(2) = xupper - ABLdepth
+      ABLypos = ylower + ABLdepth
+      write(6,*) '+++ ABLdepth, ABLypos: ',ABLdepth, ABLypos
+      write(6,*) '+++ ABLxpos: ',ABLxpos
 
       return
 

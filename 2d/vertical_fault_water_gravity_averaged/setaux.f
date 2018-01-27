@@ -10,6 +10,8 @@ c     #  aux(3,i,j) = mu in (i,j) cell
 c     #  aux(4,i,j) = cp in (i,j) cell
 c     #  aux(5,i,j) = cs in (i,j) cell
 c     #  aux(6,i,j) = slip across fault
+c     #  aux(7,i,j) = stretch in x for ABL
+c     #  aux(8,i,j) = stretch in y for ABL
 c
 c     # Piecewise constant medium
 c     # Material parameters are set in setprob.f
@@ -20,15 +22,28 @@ c
       dimension aux(maux,1-mbc:mx+mbc,1-mbc:my+mbc)
       common /comaux/ rho1,amu1,alam1,rho2,amu2,alam2
 
+      real(kind=8) :: ABLdepth, ABLxpos(2), ABLypos
+      common /ablparam/ ABLdepth, ABLxpos, ABLypos
+
+      pi2 = 2.d0*datan(1.d0)
+
       aux(6,:,:) = 0.d0   ! set in b4step2 each time step
 
       do 30 j=1-mbc,my+mbc
+       ycell = ylower + (j-0.5d0)*my
        do 20 i=1-mbc,mx+mbc
+          xcell = xlower + (i-0.5d0)*mx
           xl = xlower + (i-1.0d0)*dx
           yl = ylower + (j-1.0d0)*dy
-!$OMP     CRITICAL (cellave_fss)
-          call cellave(xl,yl,dx,dy,w1)
-!$OMP     END CRITICAL (cellave_fss)
+
+          if (.false.) then
+!$OMP         CRITICAL (cellave_fss)
+              call cellave(xl,yl,dx,dy,w1)
+!$OMP         END CRITICAL (cellave_fss)
+           else
+              w1 = 0.d0  ! no water, all rock
+           endif
+
           w2 = 1.d0 - w1
 
           aux(1,i,j) = w1*rho1 + w2*rho2
@@ -53,6 +68,31 @@ c
           aux(4,i,j) = dsqrt(bulk/aux(1,i,j))
           aux(5,i,j) = dsqrt(aux(3,i,j)/aux(1,i,j))
 
+          ! set absorbing layer factor in x direction
+          if (ABLdepth > 1.d-10) then
+            if (xcell .le. ABLxpos(1)) then
+              aux(7,i,j) = 1.d0/(1.d0 + dtan(pi2*(ABLxpos(1) 
+     &                      - xcell)/ABLdepth)**2)
+              aux(7,i,j) = exp(-2.d0*(ABLxpos(1)-xcell)/ABLdepth)
+            elseif (xcell .ge. ABLxpos(2)) then
+              aux(7,i,j) = 1.d0/(1.d0 + dtan(pi2*(xcell 
+     &                      - ABLxpos(2))/ABLdepth)**2)
+              aux(7,i,j) = exp(-2.d0*(xcell-ABLxpos(2))/ABLdepth)
+            else
+              aux(7,i,j) = 1.d0
+            end if
+          end if
+
+          ! set absorbing layer factor in y direction
+          if (ABLdepth > 1.d-10) then
+            if (ycell .le. ABLypos) then
+              aux(8,i,j) = 1.d0/(1.d0 + dtan(pi2*(ABLypos 
+     &                     - ycell)/ABLdepth)**2)
+              aux(8,i,j) = exp(-2.d0*(ABLypos-ycell)/ABLdepth)
+            else
+              aux(8,i,j) = 1.d0
+            end if
+          end if
    20     continue
    30    continue
 
