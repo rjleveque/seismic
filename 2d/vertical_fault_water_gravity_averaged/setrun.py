@@ -61,13 +61,13 @@ def setrun(claw_pkg='amrclaw'):
     clawdata.num_dim = num_dim
     
     # Lower and upper edge of computational domain:
-    clawdata.lower[0] = -100e3 #-230e3       # xlower
-    clawdata.upper[0] =  100e3 #230e3        # xupper
+    clawdata.lower[0] = -180e3       # xlower
+    clawdata.upper[0] =  180e3        # xupper
     clawdata.lower[1] = -60e3        # ylower
     clawdata.upper[1] = 0.0          # yupper
     
     # Number of grid cells:
-    clawdata.num_cells[0] = 50 #115     # mx
+    clawdata.num_cells[0] = 90     # mx
     clawdata.num_cells[1] = 30     # my
     
 
@@ -115,8 +115,8 @@ def setrun(claw_pkg='amrclaw'):
     if clawdata.output_style==1:
         # Output ntimes frames at equally spaced times up to tfinal:
         # Can specify num_output_times = 0 for no output
-        clawdata.num_output_times = 50
-        clawdata.tfinal = 100.
+        clawdata.num_output_times = 100
+        clawdata.tfinal = 1000.
         clawdata.output_t0 = True  # output at initial (or restart) time?
         
     elif clawdata.output_style == 2:
@@ -126,8 +126,8 @@ def setrun(claw_pkg='amrclaw'):
  
     elif clawdata.output_style == 3:
         # Output every step_interval timesteps over total_steps timesteps:
-        clawdata.output_step_interval = 1
-        clawdata.total_steps = 2
+        clawdata.output_step_interval = 2
+        clawdata.total_steps = 40
         clawdata.output_t0 = True  # output at initial (or restart) time?
         
 
@@ -285,13 +285,9 @@ def setrun(claw_pkg='amrclaw'):
 
     # List of refinement ratios at each level (length at least
     # amr_level_max-1)
-    #amrdata.refinement_ratios_x = [5,5,2,2]
-    #amrdata.refinement_ratios_y = [5,5,2,2]
-    #amrdata.refinement_ratios_t = [5,5,2,2]
-
-    amrdata.refinement_ratios_x = [5,2]
-    amrdata.refinement_ratios_y = [5,3]
-    amrdata.refinement_ratios_t = [5,3]
+    amrdata.refinement_ratios_x = [5,5,2,2]
+    amrdata.refinement_ratios_y = [5,5,2,2]
+    amrdata.refinement_ratios_t = [5,5,2,2]
 
 
     # Specify type of each aux variable in amrdata.auxtype.
@@ -337,11 +333,12 @@ def setrun(claw_pkg='amrclaw'):
     # to specify regions of refinement append lines of the form
     #  [minlevel,maxlevel,t1,t2,x1,x2,y1,y2]
     #regions.append([1,1,0,1e9,-1000e3,1000e3,-100e3,0])  # whole domain, all time
-    regions.append([1,3,0,1e9,-1000e3,1000e3,-100e3,0])  # whole domain, all time
-    regions.append([1,4,0,50,-20e3,20e3,-30e3,0])  # fault region, short time
-    regions.append([1,3,0,1e9,-200e3,200e3,-35e3,0])  # inner region, all time
-    #regions.append([1,3,0,50,-200e3,200e3,-25e3,0])  # inner region, medium t
-    regions.append([1,4,0,1e9,-200e3,200e3,-5e3,0])  # inner water layer, all time
+    regions.append([1,1,0,1e9,-1000e3,1000e3,-100e3,0])  # whole domain, all time
+    regions.append([2,2,0,50,-20e3,20e3,-30e3,0])  # fault region, short time
+    #regions.append([1,3,0,1e9,-200e3,200e3,-35e3,0])  # inner region, all time
+    regions.append([1,2,0,150,-150e3,150e3,-35e3,0])  # inner region, medium t
+    regions.append([1,2,0,1e9,-200e3,200e3,-5e3,0])  # inner water layer, all time
+    regions.append([1,3,0,1e9,40e3,150e3,-5e3,0])  # shelf layer, all time
 
 
 

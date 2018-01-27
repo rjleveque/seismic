@@ -72,6 +72,8 @@ subroutine rpn2(ixy,maxm,meqn,mwaves,maux,mbc,mx,ql,qr,auxl,auxr,wave,s,amdq,apd
     double precision :: det, a1, a2, a3, a4
     double precision :: slip
 
+    s = 0.d0
+
     ! set ku to point to  the component of the system that corresponds
     ! to velocity in the direction of this slice, kv to the orthogonal
     ! velocity.  Similarly ksig11 and ksig22 point to normal stresses.
@@ -218,6 +220,7 @@ subroutine rpn2(ixy,maxm,meqn,mwaves,maux,mbc,mx,ql,qr,auxl,auxr,wave,s,amdq,apd
         do mw=1,mwaves
           s(mw,i) = s(mw,i)*auxl(6+ixy,i)
         end do
+        if (auxl(6+ixy,i) > 1.d0) write(6,*) '+++ auxl = ',auxl(6+ixy,i)
 
         ! compute the leftgoing and rightgoing flux differences:
         ! Note s(i,1),s(i,3) < 0   and   s(i,2),s(i,4) > 0.

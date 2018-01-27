@@ -11,7 +11,7 @@ import numpy as np
 import sys
 sys.path.insert(0,'..')
 
-csig = 30
+csig = 100
 cdivcurl = 1e-6
 xlimits = [-200e3, 200e3]
 
@@ -26,8 +26,8 @@ ybot = -h0
 x0_slope = 50e3
 x0_shelf = 100e3
 z0_ocean = -h0
-z0_shelf = z0_ocean #flat
-#z0_shelf = -2500.0
+#z0_shelf = z0_ocean #flat
+z0_shelf = -960.0
 
 def zbottom(x):
     #ybottom = -10000. + 6000*(x+40e3)/80e3
@@ -169,8 +169,8 @@ def setplot(plotdata):
     plotitem = plotaxes.new_plotitem(plot_type='2d_pcolor')
     plotitem.plot_var = 5 #2
     plotitem.pcolor_cmap = colormaps.blue_white_red
-    plotitem.pcolor_cmin = -0.3 #-csig
-    plotitem.pcolor_cmax =  0.3 #csig
+    plotitem.pcolor_cmin = -0.5 #-csig
+    plotitem.pcolor_cmax =  0.5 #csig
     plotitem.add_colorbar = True
     plotitem.colorbar_shrink = 0.7
     plotitem.amr_celledges_show = [False]

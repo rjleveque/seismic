@@ -28,15 +28,17 @@ c
       pi2 = 2.d0*datan(1.d0)
 
       aux(6,:,:) = 0.d0   ! set in b4step2 each time step
+      aux(7,:,:) = 1.d0   ! reset below if ABL
+      aux(8,:,:) = 1.d0   ! reset below if ABL
 
       do 30 j=1-mbc,my+mbc
-       ycell = ylower + (j-0.5d0)*my
+       ycell = ylower + (j-0.5d0)*dy
        do 20 i=1-mbc,mx+mbc
-          xcell = xlower + (i-0.5d0)*mx
+          xcell = xlower + (i-0.5d0)*dx
           xl = xlower + (i-1.0d0)*dx
           yl = ylower + (j-1.0d0)*dy
 
-          if (.false.) then
+          if (.true.) then
 !$OMP         CRITICAL (cellave_fss)
               call cellave(xl,yl,dx,dy,w1)
 !$OMP         END CRITICAL (cellave_fss)
@@ -81,6 +83,7 @@ c
             else
               aux(7,i,j) = 1.d0
             end if
+            if (aux(7,i,j) > 1.d0) write(6,*) '+++ aux7 = ',aux(7,i,j)
           end if
 
           ! set absorbing layer factor in y direction
@@ -92,6 +95,7 @@ c
             else
               aux(8,i,j) = 1.d0
             end if
+            if (aux(8,i,j) > 1.d0) write(6,*) '+++ aux8 = ',aux(8,i,j)
           end if
    20     continue
    30    continue

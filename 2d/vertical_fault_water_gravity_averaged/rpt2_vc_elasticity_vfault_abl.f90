@@ -184,6 +184,8 @@ subroutine rpt2(ixy,imp,maxm,meqn,mwaves,maux,mbc,mx,ql,qr,aux1,aux2,aux3,asdq,b
             bmasdq(m,i) = bmasdq(m,i) * aux2(9-ixy,i1)
             bpasdq(m,i) = bpasdq(m,i) * aux3(9-ixy,i1)
             enddo
+         !if (aux2(9-ixy,i1) > 1.d0) write(6,*) '+++ aux2(9) = ',aux2(9-ixy,i1)
+         !if (aux3(9-ixy,i1) > 1.d0) write(6,*) '+++ aux3(9) = ',aux3(9-ixy,i1)
 
       enddo
 !
