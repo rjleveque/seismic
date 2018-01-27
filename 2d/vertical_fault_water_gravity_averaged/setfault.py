@@ -11,12 +11,12 @@ def make_fault():
     width = 10e3
     #theta = 0.20
     dip = 90.  # dip in degrees
-    fault_top_center = [0.,-5e3]
+    fault_top_center = [0.,-10e3]
     average_slip = 2.0
     max_slip = 2*average_slip # if modulated by cosine hump below
     mu = 3e10
     rupture_time = 0.0
-    rise_time = 10.
+    rise_time = 20.
     nsubfaults = 20
 
     theta = dip*pi/180.

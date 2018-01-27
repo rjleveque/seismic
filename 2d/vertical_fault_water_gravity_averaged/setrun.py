@@ -114,8 +114,8 @@ def setrun(claw_pkg='amrclaw'):
     if clawdata.output_style==1:
         # Output ntimes frames at equally spaced times up to tfinal:
         # Can specify num_output_times = 0 for no output
-        clawdata.num_output_times = 40
-        clawdata.tfinal = 100.
+        clawdata.num_output_times = 50
+        clawdata.tfinal = 300.
         clawdata.output_t0 = True  # output at initial (or restart) time?
         
     elif clawdata.output_style == 2:
@@ -284,9 +284,13 @@ def setrun(claw_pkg='amrclaw'):
 
     # List of refinement ratios at each level (length at least
     # amr_level_max-1)
-    amrdata.refinement_ratios_x = [5,5,2,2]
-    amrdata.refinement_ratios_y = [5,5,2,2]
-    amrdata.refinement_ratios_t = [5,5,2,2]
+    #amrdata.refinement_ratios_x = [5,5,2,2]
+    #amrdata.refinement_ratios_y = [5,5,2,2]
+    #amrdata.refinement_ratios_t = [5,5,2,2]
+
+    amrdata.refinement_ratios_x = [5,2]
+    amrdata.refinement_ratios_y = [5,3]
+    amrdata.refinement_ratios_t = [5,3]
 
 
     # Specify type of each aux variable in amrdata.auxtype.
@@ -331,9 +335,10 @@ def setrun(claw_pkg='amrclaw'):
     # to specify regions of refinement append lines of the form
     #  [minlevel,maxlevel,t1,t2,x1,x2,y1,y2]
     regions.append([1,1,0,1e9,-1000e3,1000e3,-100e3,0])  # whole domain, all time
-    regions.append([1,4,0,20,-1000e3,1000e3,-30e3,0])  # short time
-    regions.append([1,3,0,1e9,-100e3,100e3,-20e3,0])  # inner region, all time
-    regions.append([1,5,0,1e9,-100e3,100e3,-5e3,0])  # inner water layer, all time
+    regions.append([1,4,0,50,-20e3,20e3,-30e3,0])  # fault region, short time
+    regions.append([1,3,0,1e9,-100e3,100e3,-25e3,0])  # inner region, all time
+    #regions.append([1,3,0,50,-100e3,100e3,-25e3,0])  # inner region, medium t
+    regions.append([1,4,0,1e9,-100e3,100e3,-5e3,0])  # inner water layer, all time
 
 
 
