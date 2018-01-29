@@ -146,8 +146,6 @@ subroutine rpn2(ixy,maxm,meqn,mwaves,maux,mbc,mx,ql,qr,auxl,auxr,wave,s,amdq,apd
         ! interface between water and rock
         a3 = 0.d0
         a4 = ((ql(2,i) - ql(1,i))*nxy + ql(3,i)*(nx2-ny2)) / amur
-        print *, 'Not tested'
-        stop
       else
         ! internal water interface
         a3 = 0.d0

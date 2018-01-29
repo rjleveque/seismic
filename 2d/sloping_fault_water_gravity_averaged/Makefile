@@ -24,7 +24,7 @@ OVERWRITE ?= True                   # False ==> make a copy of OUTDIR first
 # Environment variable FC should be set to fortran compiler, e.g. gfortran
 
 # Compiler flags can be specified here or set as an environment variable
-FFLAGS ?= -fopenmp -ffpe-trap='overflow','invalid','zero','underflow','inexact','denormal'
+FFLAGS ?= -fopenmp #-g -fbacktrace -ffpe-trap='overflow','invalid','zero','underflow','inexact','denormal'
 
 # ---------------------------------
 # package sources for this program:
@@ -53,10 +53,10 @@ MODULES = \
     $(SEISLIB)/fault_module.f90
 
 SOURCES = \
-  cellave.f \
+  cellave.f90 \
   qinit.f \
   setprob.f90 \
-  fdisc.f \
+  fdisc.f90 \
   bc2amr.f \
   setaux.f90 \
   src2.f90 \

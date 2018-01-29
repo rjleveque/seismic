@@ -50,36 +50,30 @@ subroutine setaux(mbc,mx,mz,xlower,zlower,dx,dz,maux,aux)
         do i=1-mbc,mx + mbc
           xcell = xlower + (i-0.5d0)*dx
 
-          if (zcell .gt. zlower_ocean) then
-            lambda_cell = lambda_water
-            mu_cell = mu_water
-            rho_cell = rho_water
-          else
-            lambda_cell = lambda_plate
-            mu_cell = mu_plate
-            rho_cell = rho_plate
-          endif
-
           call cellave(xcell-0.5d0*dx, zcell-0.5d0*dz, dx, dz, w1)
           w2 = 1.d0 - w1
 
-          if (abs(w1-1.d0) > 1.d-10 .and. abs(w2-1.d0) > 1.d-10) then
-            print *, w1, w2
-            print *, xcell-0.5d0*dx, zcell-0.5d0*dz, dx, dz
-            w1 = 100.d0
-            print *, 'xlow, ylow, dx, dy', xcell-0.5d0*dx, zcell - 0.5d0*dz, dx, dz
-            call cellave(xcell-0.5d0*dx, zcell-0.5d0*dz, dx, dz, w1)
-            print *, 'stopping'
-            stop
-          endif
-
-!          rho_cell = w1*rho_water + w2*rho_plate
-!          lambda_cell = 1.d0/(w1/lambda_water + w2/lambda_plate)
-!          mu_cell = w1*mu_water + w2*mu_plate
+          rho_cell = w1*rho_water + w2*rho_plate
+          lambda_cell = 1.d0/(w1/lambda_water + w2/lambda_plate)
+          mu_cell = w1*mu_water + w2*mu_plate
 
           aux(1,i,j) = rho_cell
           aux(2,i,j) = lambda_cell
           aux(3,i,j) = mu_cell
+
+          ! DEBUG CHECKING
+!          if (i > 1 .and. aux(3,i,j) > 1.d-10 .and. aux(3,i-1,j) < 1.d-10) then
+!            call cellave(xcell-1.5d0*dx, zcell-0.5d0*dz, dx, dz, rho_cell)
+!            print *, 'x, z', xcell, zcell
+!            print *, 'auxIm1, auxI', aux(3,i-1,j), aux(3,i,j)
+!            print *, 'wIm1, wI', rho_cell, w1
+!            stop
+!          endif
+
+          if (j > 1 .and. aux(3,i,j) > 1.d-10 .and. aux(3,i,j-1) < 1.d-10) then
+            print *, 'hello 2'
+            stop
+          endif
 
           ! Calculate pressure and shear wave speeds
           cp = dsqrt((lambda_cell + 2*mu_cell)/rho_cell)

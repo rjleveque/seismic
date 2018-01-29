@@ -175,7 +175,7 @@ def setrun(claw_pkg='amrclaw'):
     # Specify at what times the results should be written to fort.q files.
     # Note that the time integration stops after the final output time.
 
-    clawdata.output_style = 1
+    clawdata.output_style = 2
 
     if clawdata.output_style==1:
         # Output ntimes frames at equally spaced times up to tfinal:
@@ -187,7 +187,7 @@ def setrun(claw_pkg='amrclaw'):
     elif clawdata.output_style == 2:
         # Specify a list or numpy array of output times:
         # Include t0 if you want output at the initial time.
-        clawdata.output_times =  list(np.linspace(0,10,11))
+        clawdata.output_times = list(np.linspace(0,30,31)) + list(np.linspace(32,600,285))
 
     elif clawdata.output_style == 3:
         # Output every step_interval timesteps over total_steps timesteps:
@@ -402,7 +402,9 @@ def setrun(claw_pkg='amrclaw'):
         rundata.gaugedata.min_time_increment = clawdata.tfinal/clawdata.num_output_times
 
     elif clawdata.output_style == 2:
-        rundata.gauagedata.min_time_increment = min(clawdata.output_times)
+        rundata.gaugedata.min_time_increment = min(
+            np.array(clawdata.output_times[1:]) -
+            np.array(clawdata.output_times[0:-1]) )
 
 
     # ---------------

@@ -78,36 +78,21 @@ class Mapping(Mapping2D):
         The variable tol ensures the physical grid also lines up with a horizontal sea floor
         """
 
-        # define grid that is scaled or shifted to line up with ocean floor
-        slope = (self.zlower_shelf - self.zlower_ocean)/(self.xlower_shelf - self.xlower_slope)
-        scale = np.ones(np.shape(zc))
-        scale = where(xc > self.xlower_slope,
-             (self.zlower_ocean + (xc-self.xlower_slope)*slope)/self.zlower_ocean, scale)
-        scale = where(xc > self.xlower_shelf, self.zlower_shelf/self.zlower_ocean, scale)
-        shift = np.zeros(np.shape(zc))
-        shift = where(xc > self.xlower_slope, (xc-self.xlower_slope)*slope, shift)
-        shift = where(xc > self.xlower_shelf, self.zlower_shelf-self.zlower_ocean, shift)
-        shift = where(zc < self.zlower_ocean,
-            (zc + self.fault_depth)/(self.zlower_ocean+self.fault_depth)*shift, shift)
-        shift = where(zc < -self.fault_depth, 0.0, shift)
-        x_floor = xc
-        z_floor = where(zc > self.zlower_ocean, zc*scale, zc+shift)
-
         # define grid that is rotated to line up with fault
-        zc = zc + self.fault_zshift
-        x_rot = self.xcenter + np.cos(self.theta)*(xc-self.xcenter) + np.sin(self.theta)*(zc-self.zcenter)
-        z_rot = self.zcenter - np.sin(self.theta)*(xc-self.xcenter) + np.cos(self.theta)*(zc-self.zcenter)
+        zc_tmp = zc + self.fault_zshift
+        x_rot = self.xcenter + np.cos(self.theta)*(xc-self.xcenter) + np.sin(self.theta)*(zc_tmp-self.zcenter)
+        z_rot = self.zcenter - np.sin(self.theta)*(xc-self.xcenter) + np.cos(self.theta)*(zc_tmp-self.zcenter)
         # construct level set function in computational domain
         tol = self.fault_depth + self.zlower_ocean
-        ls = np.abs(zc - self.zcenter)
-        ls = np.where(xc < self.xcl, np.sqrt((xc-self.xcl)**2 + (zc-self.zcenter)**2), ls)
-        ls = np.where(xc > self.xcr, np.sqrt((xc-self.xcr)**2 + (zc-self.zcenter)**2), ls)
+        ls = np.abs(zc_tmp - self.zcenter)
+        ls = np.where(xc < self.xcl, np.sqrt((xc-self.xcl)**2 + (zc_tmp-self.zcenter)**2), ls)
+        ls = np.where(xc > self.xcr, np.sqrt((xc-self.xcr)**2 + (zc_tmp-self.zcenter)**2), ls)
         ls += self.zlower_ocean
         tol += self.zlower_ocean
 
         # interpolate between grids
-        xp = np.where(ls < tol, (tol-ls)/tol*x_rot + ls/tol*x_floor, x_floor)
-        zp = np.where(ls < tol, (tol-ls)/tol*z_rot + ls/tol*z_floor, z_floor)
+        xp = np.where(ls < tol, (tol-ls)/tol*x_rot + ls/tol*xc, xc)
+        zp = np.where(ls < tol, (tol-ls)/tol*z_rot + ls/tol*zc, zc)
         xp = np.where(ls < 0.0, x_rot, xp)
         zp = np.where(ls < 0.0, z_rot, zp)
 
