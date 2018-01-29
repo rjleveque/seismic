@@ -6,17 +6,15 @@ from clawpack.geoclaw.data import LAT2METER
 fault = dtopotools.Fault(coordinate_specification='top center')
 fault.subfaults = []
 
-width = 5000.0
-#theta = 0.20
-dip = 90.  # dip in degrees
-fault_top_center = [0.,-10e3]
+width = 50000.0
+theta = 0.20
+fault_top_center = [-100000.0,-20000.0]
 slip = 1.0
 mu = 3e10
 rupture_time = 0.0
-rise_time = 10.
+rise_time = 10.0
 nsubfaults = 1
 
-theta = dip*pi/180.
 longitude0 = fault_top_center[0]/LAT2METER
 dlongitude = width*cos(theta)/LAT2METER / nsubfaults
 ddepth = width*sin(theta) / nsubfaults
@@ -25,7 +23,7 @@ subfault_width = width/nsubfaults
 for i in range(nsubfaults):
     subfault = dtopotools.SubFault()
     subfault.mu = mu
-    subfault.dip = dip  #theta/pi*180.0
+    subfault.dip = theta/pi*180.0
     subfault.width = subfault_width
     subfault.depth = -fault_top_center[1] + ddepth*i
     subfault.slip = slip

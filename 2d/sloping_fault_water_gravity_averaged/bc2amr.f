@@ -3,17 +3,22 @@ c
 c ------------------------------------------------------------------
 c
       subroutine bc2amr(val,aux,nrow,ncol,meqn,naux,
-     1                  hx, hy, level, time, 
-     2                  xlo_patch, xhi_patch, ylo_patch,yhi_patch)
- 
+     &                  hx, hy, level, time,
+     &                  xlower_patch, xupper_patch,
+     &                  ylower_patch,yupper_patch)
+
+c  ---------------------------------------------------------------
+c  Modified for elasticity with stress imposed at top boundary.
+c  Assume extrapolation will be used at other boundaries.
+c  ---------------------------------------------------------------
 c
 c
 c :::::::::: bc2amr ::::::::::::::::::::::::::::::::::::::::::::::;
 c
 c     Take a grid patch with mesh widths hx,hy, of dimensions nrow by
 c     ncol,  and set the values of any piece of
-c     of the patch which extends outside the physical domain 
-c     using the boundary conditions. 
+c     of the patch which extends outside the physical domain
+c     using the boundary conditions.
 c
 c     ------------------------------------------------
 c     # Standard boundary condition choices for amr2ez in clawpack
@@ -26,40 +31,40 @@ c     #            =  3  for solid walls, assuming this can be implemented
 c     #                  by reflecting the data about the boundary and then
 c     #                  negating the 2'nd (for k=1,2) or 3'rd (for k=3,4)
 c     #                  component of q.
-c     #            =  5  sphere bcs (left half maps to right half of same 
+c     #            =  4  sphere bcs (left half maps to right half of same
 c     #                  side, and vice versa), as if domain folded in half
 c     ------------------------------------------------
 c
-c     The corners of the grid patch are at 
-c        (xlo_patch,ylo_patch)  --  lower left corner
-c        (xhi_patch,yhi_patch) --  upper right corner
+c     The corners of the grid patch are at
+c        (xlower_patch,ylower_patch)  --  lower left corner
+c        (xupper_patch,yupper_patch) --  upper right corner
 c
 c     The physical domain itself is a rectangle bounded by
 c        (xlower,ylower)  -- lower left corner
 c        (xupper,yupper)  -- upper right corner
-c     
-c     the picture is the following: 
+c
+c     the picture is the following:
 c
 c               _____________________ (xupper,yupper)
-c              |                     |  
-c          ____|____ (xhi_patch,yhi_patch)   
+c              |                     |
+c          _________ (xupper_patch,yupper_patch)   |
 c          |   |    |                |
 c          |   |    |                |
 c          |   |    |                |
 c          |___|____|                |
-c (xlo_patch,ylo_patch) |            |
+c (xlower_patch,ylower_patch) |                     |
 c              |                     |
 c              |_____________________|
 c   (xlower,ylower)
-c        
+c
 c
 c     Any cells that lie outside the physical domain are ghost cells whose
 c     values should be set in this routine.  This is tested for by comparing
-c     xlo_patch with xlower to see if values need to be set at the left, as in
+c     xlower_patch with xlower to see if values need to be set at the left, as in
 c     the figure above, and similarly at the other boundaries.
 c
 c     Patches are guaranteed to have at least 1 row of cells filled
-c     with interior values so it is possible to  extrapolate. 
+c     with interior values so it is possible to  extrapolate.
 c     Fix trimbd if you want more than 1 row pre-set.
 c
 c     Make sure the order the boundaries are specified is correct
@@ -67,7 +72,7 @@ c     so that diagonal corner cells are also properly taken care of.
 c
 c     Periodic boundaries are set before calling this routine, so if the
 c     domain is periodic in one direction only you
-c     can safely extrapolate in the other direction. 
+c     can safely extrapolate in the other direction.
 c
 c     Don't overwrite ghost cells in periodic directions!
 c
@@ -76,22 +81,18 @@ c ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::;
       use amr_module, only: mthbc,xlower,ylower,xupper,yupper
       use amr_module, only: xperdom,yperdom,spheredom
 
-      implicit none
+      implicit double precision (a-h,o-z)
 
       real*8  val(meqn,nrow,ncol), aux(naux,nrow,ncol)
       integer nrow,ncol,meqn,naux,level
       real*8  hx,hy,time, hxmarg, hymarg
       real*8  xlo_patch,xhi_patch,ylo_patch,yhi_patch
       integer nxl,nxr,ibeg,nyb,nyt,jbeg,i,j,m
-      
-      real*8 s, xcell
-      real*8  x, p_atm, p_water, h_top, p_ambient, dist
-      real*8  t_moving_bottom, x1, pi, ampl
-      real*8  rho,bulk,cc,zz,g
-      real*8  tfactor, zfinal, width
 
-
-      g = 9.81d0
+      real(kind=8) :: lambda_plate, mu_plate, rho_plate, lambda_water,
+     &     mu_water, rho_water, g
+      common /material/ lambda_plate, mu_plate, rho_plate, lambda_water,
+     &     mu_water, rho_water, g
 
       hxmarg = hx*.01
       hymarg = hy*.01
@@ -102,7 +103,7 @@ c
 c-------------------------------------------------------
 c     # left boundary:
 c-------------------------------------------------------
-      if (xlo_patch .ge. xlower-hxmarg) then
+      if (xlower_patch .ge. xlower-hxmarg) then
 c        # not a physical boundary -- no cells at this edge lies
 c        # outside the physical bndry.
 c        # values are set elsewhere in amr code.
@@ -110,13 +111,13 @@ c        # values are set elsewhere in amr code.
          endif
 c
 c     # number of grid cells from this patch lying outside physical domain:
-      nxl = (xlower+hxmarg-xlo_patch)/hx
+      nxl = (xlower+hxmarg-xlower_patch)/hx
 c
       go to (100,110,120,130) mthbc(1)+1
 c
   100 continue
 c     # user-specified boundary conditions go here in place of error output
-      write(6,*) 
+      write(6,*)
      &   '*** ERROR *** mthbc(1)=0 and no BCs specified in bc2amr'
       stop
       go to 199
@@ -153,7 +154,7 @@ c
 c-------------------------------------------------------
 c     # right boundary:
 c-------------------------------------------------------
-      if (xhi_patch .le. xupper+hxmarg) then
+      if (xupper_patch .le. xupper+hxmarg) then
 c        # not a physical boundary --  no cells at this edge lies
 c        # outside the physical bndry.
 c        # values are set elsewhere in amr code.
@@ -161,14 +162,14 @@ c        # values are set elsewhere in amr code.
          endif
 c
 c     # number of grid cells lying outside physical domain:
-      nxr = (xhi_patch - xupper + hxmarg)/hx
+      nxr = (xupper_patch - xupper + hxmarg)/hx
       ibeg = max0(nrow-nxr+1, 1)
 c
       go to (200,210,220,230) mthbc(2)+1
 c
   200 continue
 c     # user-specified boundary conditions go here in place of error output
-      write(6,*) 
+      write(6,*)
      &   '*** ERROR *** mthbc(2)=0 and no BCs specified in bc2amr'
       stop
       go to 299
@@ -181,7 +182,7 @@ c     # zero-order extrapolation:
                val(m,i,j) = val(m,ibeg-1,j)
   215       continue
       go to 299
-  
+
   220 continue
 c     # periodic:   handled elsewhere in amr
       go to 299
@@ -199,13 +200,13 @@ c     # negate the normal velocity:
             val(2,i,j) = -val(2,i,j)
   236    continue
       go to 299
-   
+
   299 continue
 c
 c-------------------------------------------------------
 c     # bottom boundary:
 c-------------------------------------------------------
-      if (ylo_patch .ge. ylower-hymarg) then
+      if (ylower_patch .ge. ylower-hymarg) then
 c        # not a physical boundary -- no cells at this edge lies
 c        # outside the physical bndry.
 c        # values are set elsewhere in amr code.
@@ -213,44 +214,34 @@ c        # values are set elsewhere in amr code.
          endif
 c
 c     # number of grid cells lying outside physical domain:
-      nyb = (ylower+hymarg-ylo_patch)/hy
+      nyb = (ylower+hymarg-ylower_patch)/hy
 c
       go to (300,310,320,330) mthbc(3)+1
 c
   300 continue
-c     # velocity applied to bottom surface with v=s
-
-c     # zero-order extrapolation:
+c     # user specified - tangential motion
       do 305 j=1,nyb
          do 305 i=1,nrow
             do 305 m=1,meqn
-                val(m,i,j) = val(m,i,nyb+1)
+               val(m,i,j) =  val(m,i,2*nyb+1-j)
   305       continue
-
-c     # set the normal velocity:
-      t_moving_bottom = 100.d0
-      zfinal = 10.d0 ! final displacement of bottom
-      width = 15.d3 ! gaussian parameter
-      pi = 4.d0*atan(1.d0)
-      tfactor = pi/(2.d0*t_moving_bottom)
-     &                  * sin(pi*time/t_moving_bottom)
-
-      ! switch to extrapolation after boundary motion complete
-      ! GOES UNSTABLE!
-      !if (time > t_moving_bottom + 5.d0) go to 399
-
+c     # negate the normal velocity and impose tangential velocity:
+      pi = acos(-1.d0)
       do 306 j=1,nyb
          do 306 i=1,nrow
-            x = xlo_patch + (i-0.5d0)*hx
-            !if ((time < t_moving_bottom) .and. (x<x1)) then
-            if (time < t_moving_bottom) then
-                  s = zfinal * exp(-(x/width)**2)
-                  s = s * tfactor
-              else
-                  s = 0.d0
-              endif
-            val(5,i,j) = 2.d0*s - val(5,i,j)   ! v-velocity
-            val(4,i,j) = -val(4,i,j)           ! u-velocity
+            xcell = xlower_patch + (i-0.5d0)*hx
+            if (xcell.gt.0.95d0 .and. xcell.lt.1.05d0) then
+                if (time < 0.1d0) then
+                    s = 1.d0 - cos(2*pi*time/0.1d0)
+                  else
+                    s = 0.d0
+                  endif
+                val(4,i,j) = s - val(4,i,j)
+                val(5,i,j) = -val(5,i,j)
+            else
+                val(4,i,j) = -val(4,i,j)
+                val(5,i,j) = -val(5,i,j)
+            endif
   306    continue
       go to 399
 c
@@ -277,6 +268,7 @@ c     # solid wall (assumes 3'rd component is velocity or momentum in y):
 c     # negate the normal velocity:
       do 336 j=1,nyb
          do 336 i=1,nrow
+            val(2,i,j) = -val(2,i,j)
             val(3,i,j) = -val(3,i,j)
   336    continue
       go to 399
@@ -286,7 +278,7 @@ c
 c-------------------------------------------------------
 c     # top boundary:
 c-------------------------------------------------------
-      if (yhi_patch .le. yupper+hymarg) then
+      if (yupper_patch .le. yupper+hymarg) then
 c        # not a physical boundary --  no cells at this edge lies
 c        # outside the physical bndry.
 c        # values are set elsewhere in amr code.
@@ -294,33 +286,26 @@ c        # values are set elsewhere in amr code.
          endif
 c
 c     # number of grid cells lying outside physical domain:
-      nyt = (yhi_patch - yupper + hymarg)/hy
+      nyt = (yupper_patch - yupper + hymarg)/hy
       jbeg = max0(ncol-nyt+1, 1)
 c
       go to (400,410,420,430) mthbc(4)+1
 c
+
   400 continue
-
-c     # zero-order extrapolation:
-      do 405 m=1,meqn
-         do 405 j=jbeg,ncol
-            do 405 i=1,nrow
-               val(m,i,j) =  val(m,i,jbeg-1)
-  405       continue
-
-c     # free surface at top:
-      do 406 j=jbeg,ncol
-         do 406 i=1,nrow
-            val(3,i,j) = -val(3,i,jbeg-1)  ! sigma_12
-            ! extrapolate delta to top boundary to compute disturbance:
-            h_top = 1.5d0*val(6,i,jbeg-1) - 0.5d0*val(6,i,jbeg-2)
-            ! pressure due to excess water from surface disturbance:
-            rho = aux(1,i,j)
-            p_water = -rho * g * h_top  ! negate since sigma_jj = -p
-            !val(1,i,j) = - val(1,i,jbeg-1)
-            val(1,i,j) = 2.d0*p_water - val(1,i,jbeg-1)
-            val(2,i,j) = 2.d0*p_water - val(2,i,jbeg-1)
-  406    continue
+c     # First-order extrapolate u, v, h
+c     # Negate sigma_xy, although it should already be zero
+c     # Set sigma_xx, sigma_yy to specified pressure
+      do 405 j=jbeg,ncol
+        do 405 i=1,nrow
+            s = -rho_water*g*val(6,i,jbeg-1)
+            val(1,i,j) = 2.d0*s - val(1,i,2*jbeg-1-j)
+            val(2,i,j) = 2.d0*s - val(2,i,2*jbeg-1-j)
+            val(3,i,j) = -val(3,i,2*jbeg-1-j)
+            val(4,i,j) = val(4,i,2*jbeg-1-j)
+            val(5,i,j) = val(5,i,2*jbeg-1-j)
+            val(6,i,j) = val(6,i,2*jbeg-1-j)
+  405 continue
       go to 499
 
   410 continue
@@ -354,4 +339,3 @@ c     # negate the normal velocity:
 
       return
       end
-
