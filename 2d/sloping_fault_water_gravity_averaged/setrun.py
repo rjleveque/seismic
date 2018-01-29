@@ -187,7 +187,7 @@ def setrun(claw_pkg='amrclaw'):
     elif clawdata.output_style == 2:
         # Specify a list or numpy array of output times:
         # Include t0 if you want output at the initial time.
-        clawdata.output_times = list(np.linspace(0,30,31)) + list(np.linspace(32,600,285))
+        clawdata.output_times = list(np.linspace(0,60,61)) + list(np.linspace(62,600,270))
 
     elif clawdata.output_style == 3:
         # Output every step_interval timesteps over total_steps timesteps:
