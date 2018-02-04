@@ -15,7 +15,7 @@ subroutine b4step2(mbc,mx,my,meqn,q,xlower,ylower,dx,dy,t,dt,maux,aux)
     common /mapping/ fault_zshift
 
     integer :: i, j, k
-    real(kind=8) :: xcell, ycell, xpcell, ypcell
+    real(kind=8) :: xcell, ycell, xpcell, ypcell, slip_per_second
 
     aux(13,:,:) = 0.d0
     if (t <= event_times(nevents)) then
@@ -28,6 +28,7 @@ subroutine b4step2(mbc,mx,my,meqn,q,xlower,ylower,dx,dy,t,dt,maux,aux)
             xcell = xlower + (i-0.5d0)*dx
             if (xcb(1)-1.d-10 <= xcell - 0.5d0*dx .and. xcell + 0.5d0*dx <= xcb(2)+1.d-10) then
               ! find which subfault this cell center lies in and apply slip
+!             write(6,*) '+++ along the fault, t, ycell = ',t, ycell
               do k=1,nsubfaults
                 if (subfaults(k)%xcb(1) <= xcell .and. &
                     xcell <= subfaults(k)%xcb(2) .and. &

@@ -64,7 +64,7 @@ SOURCES = \
   mapc2p.f90 \
   $(SEISLIB)/tick.f \
   $(CLAW)/seismic/src/rp/rpn2_vc_elasticity_mapped_fault_abl.f90 \
-	$(CLAW)/seismic/src/rp/rpt2_vc_elasticity_mapped_fault_abl.f90 \
+  $(CLAW)/seismic/src/rp/rpt2_vc_elasticity_mapped_fault_abl.f90 \
   $(AMRLIB)/fss.f \
   $(AMRLIB)/zeroin.f
 #	$(AMRLIB)/cellave.f \

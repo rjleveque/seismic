@@ -279,6 +279,7 @@ def setrun(claw_pkg='amrclaw'):
     for gaugeno,x in enumerate(xgauges):
         gauges.append([gaugeno,x,clawdata.upper[1]-1,0,1e10])
 
+    # --------------
     # Checkpointing:
     # --------------
 
@@ -328,7 +329,6 @@ def setrun(claw_pkg='amrclaw'):
     amrdata.aux_type = ['center', 'center', 'center', 'center', 'center', \
         'center', 'center', 'center', 'center', 'center', 'center', \
         'capacity','yleft','xleft','yleft']
-
 
 
     # Flag for refinement based on Richardson error estimater:
