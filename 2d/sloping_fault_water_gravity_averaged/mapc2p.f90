@@ -19,29 +19,7 @@
     common /mapping/ fault_zshift
 
     ! Local variables
-    real (kind=8) :: ls, tol, x_rot, z_rot, x_floor, z_floor, zc_tmp
-    real (kind=8) :: slope, floor_scale, floor_shift
-
-    ! compute location in grid scaled or shifted to line up with ocean floor
-    if (xc > xlower_shelf) then
-      floor_scale = zlower_shelf/zlower_ocean
-      floor_shift = zlower_shelf-zlower_ocean
-    else if (xc > xlower_slope) then
-      slope = (zlower_shelf - zlower_ocean)/(xlower_shelf - xlower_slope)
-      floor_scale = (zlower_ocean + (xc-xlower_slope)*slope)/zlower_ocean
-      floor_shift = (xc - xlower_slope)*slope
-    else
-      floor_scale = 1.d0
-      floor_shift = 0.d0
-    end if
-    x_floor = xc
-    if (zc > zlower_ocean) then
-      z_floor = zc*floor_scale
-    elseif (zc < center(2)) then
-       z_floor = zc
-    else
-      z_floor = zc + (zc - center(2))/(zlower_ocean - center(2))*floor_shift
-    end if
+    real (kind=8) :: ls, tol, x_rot, z_rot, zc_tmp
 
     ! compute location in grid rotated to line up with fault
     zc_tmp = zc + fault_zshift
@@ -65,11 +43,11 @@
       xp = x_rot
       zp = z_rot
     elseif (ls < tol) then
-      xp = (tol-ls)/tol*x_rot + ls/tol*x_floor
-      zp = (tol-ls)/tol*z_rot + ls/tol*z_floor
+      xp = (tol-ls)/tol*x_rot + ls/tol*xc
+      zp = (tol-ls)/tol*z_rot + ls/tol*zc
     else
-      xp = x_floor
-      zp = z_floor
+      xp = xc
+      zp = zc
     end if
 
     return

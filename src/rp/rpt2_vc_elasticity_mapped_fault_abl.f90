@@ -145,31 +145,32 @@ subroutine rpt2(ixy,imp,maxm,meqn,mwaves,maux,mbc,mx,ql,qr,aux1,aux2,aux3,asdq,b
     csp = aux3(5,i1)
 
     ! P-wave strengths:
-    a1 = (cp*dsignm + bulk*dunm) / (bulkm*cp + bulk*cpm)
-    a2 = (cp*dsignp - bulk*dunp) / (bulkp*cp + bulk*cpp)
-
-    ! S-wave strengths depending on if slip is imposed:
-
-    if (ixy .eq. 1 .and. dabs(slipm) > 1.d-10) then
-      a3 = 0.d0
+    if ((amum > 1.d-10 .and. amu > 1.d-10) .or. &
+        (amum < 1.d-10 .and. amu < 1.d-10)) then
+      a1 = (cp*dsignm + bulk*dunm) / (bulkm*cp + bulk*cpm)
     else
-      det = amum*cs + amu*csm
-      if (det.eq.0.d0) then
-        a3 = 0.d0
-      else
-        a3 = (cs*dsigtm - amu*dutm) / det
-      end if
+      a1 = 0.d0
+    end if
+    if ((amup > 1.d-10 .and. amu > 1.d-10) .or. &
+        (amup < 1.d-10 .and. amu < 1.d-10)) then
+      a2 = (cp*dsignp - bulk*dunp) / (bulkp*cp + bulk*cpp)
+    else
+      a2 = 0.d0
     end if
 
-    if (ixy .eq. 1 .and. dabs(slipp) > 1.d-10) then
-      a4 = 0.d0
+    ! S-wave strengths (only if no slip is imposed & is rock-rock interface):
+    det = amum*cs + amu*csm
+    if ((ixy .eq. 2 .or. dabs(slipm) < 1.d-10) .and. det > 1.d-10) then
+      a3 = (cs*dsigtm - amu*dutm) / det
     else
-      det = amup*cs + amu*csp
-      if (det.eq.0.d0) then
-        a4 = 0.d0
-      else
-        a4 = (cs*dsigtp + amu*dutp) / det
-      end if
+      a3 = 0.d0
+    end if
+
+    det = amup*cs + amu*csp
+    if ((ixy .eq. 2 .or. dabs(slipp) < 1.d-10) .and. det > 1.d-10) then
+      a4 = (cs*dsigtp - amu*dutp) / det
+    else
+      a4 = 0.d0
     end if
 
     ! Compute the waves.

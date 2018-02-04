@@ -2,7 +2,6 @@
 # Makefile for Clawpack code in this directory.
 # This version only sets the local files and frequently changed
 # options, and then includes the standard makefile pointed to by CLAWMAKE.
-# Note Seismic version takes setfault.py into account
 CLAWMAKE = $(CLAW)/seismic/src/Makefile.common
 
 # See the above file for details and a list of make options, or type
@@ -16,26 +15,25 @@ CLAWMAKE = $(CLAW)/seismic/src/Makefile.common
 CLAW_PKG = amrclaw                  # Clawpack package to use
 EXE = xamr                          # Executable to create
 SETRUN_FILE = setrun.py             # File containing function to make data
-SETFAULT_FILE = setfault.py					# File containing function to make fault
 OUTDIR = _output                    # Directory for output
-SETPLOT_FILE = setplot_surface.py   # File containing function to set plots
+SETPLOT_FILE = setplot.py           # File containing function to set plots
 PLOTDIR = _plots                    # Directory for plots
 
 OVERWRITE ?= True                   # False ==> make a copy of OUTDIR first
-RESTART ?= False                    # Should = clawdata.restart in setrun
 
 # Environment variable FC should be set to fortran compiler, e.g. gfortran
 
 # Compiler flags can be specified here or set as an environment variable
-FFLAGS ?= -fopenmp
+FFLAGS ?= -fopenmp #-g -fbacktrace -ffpe-trap='overflow','invalid','zero','underflow','inexact','denormal'
 
 # ---------------------------------
 # package sources for this program:
 # ---------------------------------
 
 AMRLIB = $(CLAW)/amrclaw/src/2d
-SEISLIB = $(CLAW)/seismic/src/2d
 include $(AMRLIB)/Makefile.amr_2d
+SEISLIB = $(CLAW)/seismic/src/2d
+
 
 # ---------------------------------------
 # package sources specifically to exclude
@@ -52,18 +50,24 @@ EXCLUDE_SOURCES = \
 # ----------------------------------------
 
 MODULES = \
-  $(SEISLIB)/fault_module.f90
+    $(SEISLIB)/fault_module.f90
 
 SOURCES = \
+  cellave.f90 \
   qinit.f \
   setprob.f90 \
+  fdisc.f90 \
   bc2amr.f \
   setaux.f90 \
+  src2.f90 \
+  b4step2.f90 \
   mapc2p.f90 \
-  $(SEISLIB)/b4step2.f90 \
-	$(SEISLIB)/tick.f \
+  $(SEISLIB)/tick.f \
   $(CLAW)/seismic/src/rp/rpn2_vc_elasticity_mapped_fault_abl.f90 \
-  $(CLAW)/seismic/src/rp/rpt2_vc_elasticity_mapped_fault_abl.f90
+	$(CLAW)/seismic/src/rp/rpt2_vc_elasticity_mapped_fault_abl.f90 \
+  $(AMRLIB)/fss.f \
+  $(AMRLIB)/zeroin.f
+#	$(AMRLIB)/cellave.f \
 
 #-------------------------------------------------------------------
 # Include Makefile containing standard definitions and make options:

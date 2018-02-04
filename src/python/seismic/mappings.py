@@ -5,6 +5,7 @@ class Mapping2D(object):
 
     def __init__(self, fault):
 
+        # Obtain fault parameters
         xp1 = 1e10
         xp2 = -1e10
         for subfault in fault.subfaults:
@@ -12,30 +13,30 @@ class Mapping2D(object):
             tmp = subfault.longitude*LAT2METER
             if (tmp < xp1):
                 xp1 = tmp
-                yp1 = -subfault.depth
+                zp1 = -subfault.depth
             tmp = subfault.longitude*LAT2METER + np.cos(theta)*subfault.width
             if (xp2 < tmp):
                 xp2 = tmp
-                yp2 = -subfault.depth - np.sin(theta)*subfault.width
+                zp2 = -subfault.depth - np.sin(theta)*subfault.width
 
         xcenter = 0.5*(xp1 + xp2)
-        ycenter = 0.5*(yp1 + yp2)
-        fault_width = np.sqrt((xp2-xp1)**2 + (yp2-yp1)**2)
+        zcenter = 0.5*(zp1 + zp2)
+        fault_width = np.sqrt((xp2-xp1)**2 + (zp2-zp1)**2)
 
         xcl = xcenter - 0.5*fault_width
         xcr = xcenter + 0.5*fault_width
 
         self.fault_width = fault_width
-        self.fault_depth = -ycenter
+        self.fault_depth = -zcenter
         self.xcenter = xcenter
-        self.ycenter = ycenter
+        self.zcenter = zcenter
         self.theta = theta
         self.xcl = xcl
         self.xcr = xcr
         self.xp1 = xp1
         self.xp2 = xp2
-        self.yp1 = yp1
-        self.yp2 = yp2
+        self.zp1 = zp1
+        self.zp2 = zp2
 
 class Mapping3D(object):
 

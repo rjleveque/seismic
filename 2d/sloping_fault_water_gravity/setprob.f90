@@ -2,7 +2,7 @@
     subroutine setprob
 !   ==================
 
-    use fault_module, only: load_fault
+    use fault_module, only: load_fault, center
 
     implicit none
 
@@ -15,10 +15,13 @@
     real(kind=8) :: lambda_plate, mu_plate, rho_plate, lambda_water, mu_water, rho_water, g
     common /material/ lambda_plate, mu_plate, rho_plate, lambda_water, mu_water, rho_water, g
 
-    real(kind=8) :: scaling
-    common /water/  scaling
+    real(kind=8) :: zlower_ocean, xlower_slope, xlower_shelf, zlower_shelf
+    common /topography/ zlower_ocean, xlower_slope, xlower_shelf, zlower_shelf
 
-    real(kind=8) :: xlower, xupper, ylower
+    real(kind=8) :: fault_zshift
+    common /mapping/ fault_zshift
+
+    real(kind=8) :: xlower, xupper, ylower, yupper, dy
 !
 
     fname = 'fault.data'
@@ -31,8 +34,15 @@
 !     # comment lines starting with #:
     call opendatafile(iunit, fname)
 
-    read(iunit,*) scaling
+    read(iunit,*) zlower_ocean
+    read(iunit,*) xlower_slope
+    read(iunit,*) xlower_shelf
+    read(iunit,*) zlower_shelf
+    read(iunit,*) ABLdepth ! xlower_beach
+    read(iunit,*) ABLdepth ! xlower_shore
+    read(iunit,*) ABLdepth ! zlower_shore
     read(iunit,*) ABLdepth
+    read(iunit,*) fault_zshift
     close(iunit)
 
 
@@ -44,7 +54,7 @@
 
     read(iunit,*) xlower ! num_dim
     read(iunit,*) xlower, ylower ! lower[0], lower[1]
-    read(iunit,*) xupper ! upper[0]
+    read(iunit,*) xupper, yupper ! upper[0], upper[1]
     close(iunit)
 
 !     # Compute ABL position

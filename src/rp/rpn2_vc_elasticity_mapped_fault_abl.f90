@@ -134,13 +134,22 @@ subroutine rpn2(ixy,maxm,meqn,mwaves,maux,mbc,mx,ql,qr,auxl,auxr,wave,s,amdq,apd
       a4 = (ql(4,i)  *ny - ql(5,i)  *nx + 0.5d0*slip)/csr
     else
       det = amul*csr + amur*csl
-      if (det.eq.0.d0) then
-        ! no s-waves
-        a3 = 0.d0
-        a4 = 0.d0
-      else
+      if (det > 1.d-10) then
+        ! internal rock interface
         a3 = (csr*dsigt - amur*dut) / det
         a4 = (csl*dsigt + amul*dut) / det
+      elseif (amul > 1.d-10 .and. amur < 1.d-10) then
+        ! interface between rock and water
+        a3 = -((qr(2,i-1) - qr(1,i-1))*nxy + qr(3,i-1)*(nx2-ny2)) / amul
+        a4 = 0.d0
+      elseif (amul < 1.d-10 .and. amur > 1.d-10) then
+        ! interface between water and rock
+        a3 = 0.d0
+        a4 = ((ql(2,i) - ql(1,i))*nxy + ql(3,i)*(nx2-ny2)) / amur
+      else
+        ! internal water interface
+        a3 = 0.d0
+        a4 = 0.d0
       end if
     end if
 

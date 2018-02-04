@@ -3,10 +3,10 @@ c
 c ------------------------------------------------------------------
 c
       subroutine bc2amr(val,aux,nrow,ncol,meqn,naux,
-     &                  hx, hy, level, time, 
-     &                  xlower_patch, xupper_patch, 
+     &                  hx, hy, level, time,
+     &                  xlower_patch, xupper_patch,
      &                  ylower_patch,yupper_patch)
- 
+
 c  ---------------------------------------------------------------
 c  Modified for elasticity with stress imposed at top boundary.
 c  Assume extrapolation will be used at other boundaries.
@@ -17,8 +17,8 @@ c :::::::::: bc2amr ::::::::::::::::::::::::::::::::::::::::::::::;
 c
 c     Take a grid patch with mesh widths hx,hy, of dimensions nrow by
 c     ncol,  and set the values of any piece of
-c     of the patch which extends outside the physical domain 
-c     using the boundary conditions. 
+c     of the patch which extends outside the physical domain
+c     using the boundary conditions.
 c
 c     ------------------------------------------------
 c     # Standard boundary condition choices for amr2ez in clawpack
@@ -31,22 +31,22 @@ c     #            =  3  for solid walls, assuming this can be implemented
 c     #                  by reflecting the data about the boundary and then
 c     #                  negating the 2'nd (for k=1,2) or 3'rd (for k=3,4)
 c     #                  component of q.
-c     #            =  4  sphere bcs (left half maps to right half of same 
+c     #            =  4  sphere bcs (left half maps to right half of same
 c     #                  side, and vice versa), as if domain folded in half
 c     ------------------------------------------------
 c
-c     The corners of the grid patch are at 
+c     The corners of the grid patch are at
 c        (xlower_patch,ylower_patch)  --  lower left corner
 c        (xupper_patch,yupper_patch) --  upper right corner
 c
 c     The physical domain itself is a rectangle bounded by
 c        (xlower,ylower)  -- lower left corner
 c        (xupper,yupper)  -- upper right corner
-c     
-c     the picture is the following: 
+c
+c     the picture is the following:
 c
 c               _____________________ (xupper,yupper)
-c              |                     |  
+c              |                     |
 c          _________ (xupper_patch,yupper_patch)   |
 c          |   |    |                |
 c          |   |    |                |
@@ -56,7 +56,7 @@ c (xlower_patch,ylower_patch) |                     |
 c              |                     |
 c              |_____________________|
 c   (xlower,ylower)
-c        
+c
 c
 c     Any cells that lie outside the physical domain are ghost cells whose
 c     values should be set in this routine.  This is tested for by comparing
@@ -64,7 +64,7 @@ c     xlower_patch with xlower to see if values need to be set at the left, as i
 c     the figure above, and similarly at the other boundaries.
 c
 c     Patches are guaranteed to have at least 1 row of cells filled
-c     with interior values so it is possible to  extrapolate. 
+c     with interior values so it is possible to  extrapolate.
 c     Fix trimbd if you want more than 1 row pre-set.
 c
 c     Make sure the order the boundaries are specified is correct
@@ -72,7 +72,7 @@ c     so that diagonal corner cells are also properly taken care of.
 c
 c     Periodic boundaries are set before calling this routine, so if the
 c     domain is periodic in one direction only you
-c     can safely extrapolate in the other direction. 
+c     can safely extrapolate in the other direction.
 c
 c     Don't overwrite ghost cells in periodic directions!
 c
@@ -89,7 +89,10 @@ c ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::;
       real*8  xlo_patch,xhi_patch,ylo_patch,yhi_patch
       integer nxl,nxr,ibeg,nyb,nyt,jbeg,i,j,m
 
-
+      real(kind=8) :: lambda_plate, mu_plate, rho_plate, lambda_water,
+     &     mu_water, rho_water, g
+      common /material/ lambda_plate, mu_plate, rho_plate, lambda_water,
+     &     mu_water, rho_water, g
 
       hxmarg = hx*.01
       hymarg = hy*.01
@@ -114,7 +117,7 @@ c
 c
   100 continue
 c     # user-specified boundary conditions go here in place of error output
-      write(6,*) 
+      write(6,*)
      &   '*** ERROR *** mthbc(1)=0 and no BCs specified in bc2amr'
       stop
       go to 199
@@ -166,7 +169,7 @@ c
 c
   200 continue
 c     # user-specified boundary conditions go here in place of error output
-      write(6,*) 
+      write(6,*)
      &   '*** ERROR *** mthbc(2)=0 and no BCs specified in bc2amr'
       stop
       go to 299
@@ -179,7 +182,7 @@ c     # zero-order extrapolation:
                val(m,i,j) = val(m,ibeg-1,j)
   215       continue
       go to 299
-  
+
   220 continue
 c     # periodic:   handled elsewhere in amr
       go to 299
@@ -197,7 +200,7 @@ c     # negate the normal velocity:
             val(2,i,j) = -val(2,i,j)
   236    continue
       go to 299
-   
+
   299 continue
 c
 c-------------------------------------------------------
@@ -290,21 +293,19 @@ c
 c
 
   400 continue
-c     # no stress bc for free surface
-
-c     # zero-order extrapolation:
-      do 405 m=1,meqn
-         do 405 j=jbeg,ncol
-            do 405 i=1,nrow
-               val(m,i,j) =  val(m,i,jbeg-1)
-  405       continue
-
-c     # adjust the stress:
-      do 406 j=jbeg,ncol
-         do 406 i=1,nrow
-            val(3,i,j) = -val(3,i,jbeg-1)
-            val(2,i,j) = -val(2,i,jbeg-1)
-  406    continue
+c     # First-order extrapolate u, v, h
+c     # Negate sigma_xy, although it should already be zero
+c     # Set sigma_xx, sigma_yy to specified pressure
+      do 405 j=jbeg,ncol
+        do 405 i=1,nrow
+            s = -rho_water*g*val(6,i,jbeg-1)
+            val(1,i,j) = 2.d0*s - val(1,i,2*jbeg-1-j)
+            val(2,i,j) = 2.d0*s - val(2,i,2*jbeg-1-j)
+            val(3,i,j) = -val(3,i,2*jbeg-1-j)
+            val(4,i,j) = val(4,i,2*jbeg-1-j)
+            val(5,i,j) = val(5,i,2*jbeg-1-j)
+            val(6,i,j) = val(6,i,2*jbeg-1-j)
+  405 continue
       go to 499
 
   410 continue
@@ -338,4 +339,3 @@ c     # negate the normal velocity:
 
       return
       end
-

@@ -30,22 +30,21 @@ def setplot(plotdata):
     probdata = ClawData()
     probdata.read(plotdata.outdir + '/setprob.data',force=True)
 
-    mapping = Mapping(fault,probdata.water_scaling)
+    mapping = Mapping(fault,probdata)
     fault_width = mapping.fault_width
     xcenter = mapping.xcenter
-    ycenter = mapping.ycenter
     xp1 = mapping.xp1
     xp2 = mapping.xp2
-    yp1 = mapping.yp1
-    yp2 = mapping.yp2
+    zp1 = mapping.zp1
+    zp2 = mapping.zp2
 
     xlimits = [xcenter-0.5*probdata.domain_width,xcenter+0.5*probdata.domain_width]
-    ylimits = [-probdata.domain_depth,0.0]
-    xlimitsW = [xp1-10.0*probdata.water_depth,xp2+10.0*probdata.water_depth]
-    ylimitsW = [-5.0*probdata.water_depth,probdata.water_depth]
+    zlimits = [-probdata.domain_depth,0.0]
+    xlimitsW = [xp1+10.0*probdata.zlower_ocean,xp2-10.0*probdata.zlower_ocean]
+    zlimitsW = [5.0*probdata.zlower_ocean, 0.0]
     abl_depth = probdata.abl_depth
     xlimits_trunc = [xlimits[0]+abl_depth,xlimits[1]-abl_depth]
-    ylimits_trunc = [ylimits[0]+abl_depth,ylimits[1]]
+    zlimits_trunc = [zlimits[0]+abl_depth,zlimits[1]]
 
 
 
@@ -56,7 +55,7 @@ def setplot(plotdata):
     plotdata.parallel = True
 
     gaugedata = ClawData()
-    gaugedata.read(outdir + '/gauges.data',force=True)
+    gaugedata.read(plotdata.outdir + '/gauges.data',force=True)
     ngauges = gaugedata.ngauges/2
     xc = np.zeros(ngauges)
     for j in range(ngauges):
@@ -68,29 +67,29 @@ def setplot(plotdata):
         from pylab import plot,zeros,gca, legend
         t = current_data.t
 
-        yf = zeros(ngauges)
+        zf = zeros(ngauges)
         for gaugeno in range(ngauges):
             g = plotdata.getgauge(gaugeno)
             for k in range(1,len(g.t)):
                 if (g.t[k] > t and g.t[k-1] <= t):
                     dt = g.t[k] - g.t[k-1]
-                    yf[gaugeno] = g.q[5,k]*(t-g.t[k-1])/dt +\
+                    zf[gaugeno] = g.q[5,k]*(t-g.t[k-1])/dt +\
                                   g.q[5,k-1]*(g.t[k]-t)/dt
 
-        ys = zeros(ngauges)
+        zs = zeros(ngauges)
         for gaugeno in range(ngauges):
             g = plotdata.getgauge(ngauges+gaugeno)
             for k in range(1,len(g.t)):
                 if (g.t[k] > t and g.t[k-1] <= t):
                     dt = g.t[k] - g.t[k-1]
-                    ys[gaugeno] = g.q[5,k]*(t-g.t[k-1])/dt +\
+                    zs[gaugeno] = g.q[5,k]*(t-g.t[k-1])/dt +\
                                   g.q[5,k-1]*(g.t[k]-t)/dt
 
         ax = gca()
         kwargs ={'linestyle':'-','color':'black','label':'sea floor'}
-        plot(xc[:ngauges],yf,**kwargs)
+        plot(xc[:ngauges],zf,**kwargs)
         kwargs ={'linestyle':'-','color':'blue','label':'sea surface'}
-        plot(xc[:ngauges],ys,**kwargs)
+        plot(xc[:ngauges],zs,**kwargs)
         kwargs = {'linestyle':'--','color':'r','label':'Okada'}
         fault.plot_okada(ax,displacement='vertical',kwargs=kwargs)
         legend()
@@ -98,7 +97,7 @@ def setplot(plotdata):
     def plot_interfaces(current_data):
         from pylab import linspace, plot
         xl = linspace(xp1,xp2,100)
-        yl = linspace(yp1,yp2,100)
+        yl = linspace(zp1,zp2,100)
         plot(xl,yl,'g')
         xl = linspace(xlimits[0],xlimits[1],100)
         plot(xl,0.0*xl,'b')
@@ -125,7 +124,7 @@ def setplot(plotdata):
     plotaxes = plotfigure.new_plotaxes()
     plotaxes.axescmd = 'subplot(212)'
     plotaxes.xlimits = xlimits
-    plotaxes.ylimits = ylimits
+    plotaxes.ylimits = zlimits
     plotaxes.title = '-trace(sigma)'
     plotaxes.scaled = True
     plotaxes.afteraxes = plot_interfaces
@@ -159,7 +158,7 @@ def setplot(plotdata):
     plotaxes = plotfigure.new_plotaxes()
     plotaxes.axescmd = 'subplot(212)'
     plotaxes.xlimits = xlimitsW
-    plotaxes.ylimits = ylimitsW
+    plotaxes.ylimits = zlimitsW
     plotaxes.title = '-trace(sigma)'
     plotaxes.scaled = True
     plotaxes.afteraxes = plot_interfaces
@@ -182,7 +181,7 @@ def setplot(plotdata):
     # Set up for axes in this figure:
     plotaxes = plotfigure.new_plotaxes()
     plotaxes.xlimits = xlimits
-    plotaxes.ylimits = ylimits
+    plotaxes.ylimits = zlimits
     plotaxes.title = 'Level 3 grid patches'
     plotaxes.scaled = True
 

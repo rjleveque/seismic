@@ -11,7 +11,9 @@ import numpy as np
 import clawpack.seismic.dtopotools_horiz_okada_and_1d as dtopotools
 reload(dtopotools)
 from clawpack.seismic.mappings import Mapping2D
+from make_topo_and_grid import get_oceanfloor_parameters
 
+USE_TOPO = True
 
 #------------------------------
 def setrun(claw_pkg='amrclaw'):
@@ -30,23 +32,45 @@ def setrun(claw_pkg='amrclaw'):
 
     from clawpack.clawutil import data
 
-
     assert claw_pkg.lower() == 'amrclaw',  "Expected claw_pkg = 'amrclaw'"
 
     num_dim = 2
     rundata = data.ClawRunData(claw_pkg, num_dim)
 
+    if (USE_TOPO):
+        # Obtain topography parameters to match 1D Geoclaw
+        xlower_domain, xlower_slope, xlower_shelf, xlower_beach, xlower_shore, xupper_domain, \
+          zlower_ocean, zlower_shelf, zlower_beach, zlower_shore = get_oceanfloor_parameters()
+    else:
+        xlower_domain = -150e3
+        xlower_slope = -65e3
+        xlower_shelf = -45e3
+        xlower_beach = -5e3
+        xlower_shore = 0.0
+        xupper_domain = 0.0
+        zlower_ocean = -4500.0
+        zlower_shelf = -4500.0
+        zlower_shore = -4500.0
+
+
+    # Adjust topo parameters to remove shore
+    zlower_shore = min(zlower_shore, -100.0)
+
     #------------------------------------------------------------------
     # Problem-specific parameters to be written to setprob.data:
     #------------------------------------------------------------------
-    # Sample setup to write one line to setprob.data ...
     probdata = rundata.new_UserData(name='probdata',fname='setprob.data')
-    probdata.add_param('water_scaling', 0, 'ratio automatically set for mapping')
+    probdata.add_param('zlower_ocean', zlower_ocean, 'z-coord of ocean floor')
+    probdata.add_param('xlower_slope', xlower_slope, 'x-coord of beginning of slope')
+    probdata.add_param('xlower_shelf', xlower_shelf, 'x-coord of beginning of shelf')
+    probdata.add_param('zlower_shelf', zlower_shelf, 'z-coord of shelf')
+    probdata.add_param('xlower_beach', xlower_beach, 'x-coord of beginning of beach')
+    probdata.add_param('xlower_shore', xlower_shore, 'x-coord of beginning of shore')
+    probdata.add_param('zlower_shore', zlower_shore, 'z-coord of shore')
     probdata.add_param('abl_depth', 30e3, 'depth of absorbing layer')
+    probdata.add_param('fault_zshift', 0.0, 'vertical shift of comp domain to match fault depth')
     probdata.add_param('domain_depth', 50e3, 'depth of domain')
-    probdata.add_param('domain_width', 300e3, 'width of domain')
-    probdata.add_param('water_depth', 3e3, 'depth of water')
-
+    probdata.add_param('domain_width', xupper_domain-xlower_domain, 'width of domain')
 
     #------------------------------------------------------------------
     # Read in fault information
@@ -79,34 +103,33 @@ def setrun(claw_pkg='amrclaw'):
     clawdata.num_dim = num_dim
 
     # Number of grid cells:
-    num_cells_fault = 10
-    dx = fault_width/num_cells_fault
+    num_cells_fault = 20
 
     # determine cell number and set computational boundaries
-    target_num_cells = np.rint(probdata.domain_width/dx)    # x direction
-    num_cells_below = np.rint((target_num_cells - num_cells_fault)/2.0)
-    num_cells_above = target_num_cells - num_cells_below - num_cells_fault
-    clawdata.lower[0] = fault_center-0.5*fault_width - num_cells_below*dx
-    clawdata.upper[0] = fault_center+0.5*fault_width + num_cells_above*dx
-    clawdata.num_cells[0] = int(num_cells_below + num_cells_fault + num_cells_above)
+    dx = fault_width/num_cells_fault
+    # x direction
+    num_cells_above_fault = np.ceil((xupper_domain - (fault_center+0.5*fault_width))/dx)
+    target_num_cells = np.rint(probdata.domain_width/dx)
+    num_cells_below_fault = target_num_cells - num_cells_above_fault - num_cells_fault
+    clawdata.num_cells[0] = int(target_num_cells)
+    clawdata.lower[0] = fault_center-0.5*fault_width - num_cells_below_fault*dx
+    clawdata.upper[0] = fault_center+0.5*fault_width + num_cells_above_fault*dx
+    # z direction
+    num_cells_across_ocean = np.ceil(-zlower_ocean/dx)
+    dz = -zlower_ocean/num_cells_across_ocean
+    clawdata.num_cells[1] = int(probdata.domain_depth/dz)
+    clawdata.lower[1] = -clawdata.num_cells[1]*dz
+    clawdata.upper[1] = 0.0
 
-    num_cells_above_fault = np.rint(fault_depth/dx) # y direction
-    dy = fault_depth/num_cells_above_fault
-    num_cells_water = np.ceil(probdata.water_depth/dy)
-    target_num_cells_below_floor = np.rint(probdata.domain_depth/dy)
-    num_cells_below_fault = target_num_cells_below_floor - num_cells_above_fault
-    clawdata.lower[1] = -fault_depth - num_cells_below_fault*dy
-    clawdata.upper[1] = num_cells_water*dy
-    clawdata.num_cells[1] = int(num_cells_below_fault + num_cells_above_fault + num_cells_water)
-    probdata.water_scaling = probdata.water_depth/clawdata.upper[1]
+    probdata.fault_zshift = -fault_depth + np.ceil(fault_depth/dz)*dz
 
     # add absorbing layer
     target_num_cells = np.rint(probdata.abl_depth/dx)
     clawdata.lower[0] -= target_num_cells*dx
     clawdata.upper[0] += target_num_cells*dx
     clawdata.num_cells[0] += 2*int(target_num_cells)
-    target_num_cells = np.rint(probdata.abl_depth/dy)
-    clawdata.lower[1] -= target_num_cells*dy
+    target_num_cells = np.rint(probdata.abl_depth/dz)
+    clawdata.lower[1] -= target_num_cells*dz
     clawdata.num_cells[1] += int(target_num_cells)
 
     # Note adjustments in computational domain size
@@ -152,7 +175,7 @@ def setrun(claw_pkg='amrclaw'):
     # Specify at what times the results should be written to fort.q files.
     # Note that the time integration stops after the final output time.
 
-    clawdata.output_style = 1
+    clawdata.output_style = 2
 
     if clawdata.output_style==1:
         # Output ntimes frames at equally spaced times up to tfinal:
@@ -164,13 +187,12 @@ def setrun(claw_pkg='amrclaw'):
     elif clawdata.output_style == 2:
         # Specify a list or numpy array of output times:
         # Include t0 if you want output at the initial time.
-        clawdata.output_times =  list(np.linspace(0,5,11)) + \
-            range(6,61)
+        clawdata.output_times = list(np.linspace(0,60,61)) + list(np.linspace(62,600,270))
 
     elif clawdata.output_style == 3:
         # Output every step_interval timesteps over total_steps timesteps:
         clawdata.output_step_interval = 1
-        clawdata.total_steps = 40
+        clawdata.total_steps = 10
         clawdata.output_t0 = True  # output at initial (or restart) time?
 
 
@@ -202,7 +224,7 @@ def setrun(claw_pkg='amrclaw'):
 
     # Initial time step for variable dt.
     # (If dt_variable==0 then dt=dt_initial for all steps)
-    clawdata.dt_initial = 0.1
+    clawdata.dt_initial = 0.001
 
     # Max time step to be allowed if variable dt used:
     clawdata.dt_max = 1.000000e+99
@@ -271,28 +293,8 @@ def setrun(claw_pkg='amrclaw'):
     clawdata.bc_lower[0] = 'extrap'   # at xlower
     clawdata.bc_upper[0] = 'extrap'   # at xupper
 
-    clawdata.bc_lower[1] = 'extrap'   # at ylower
+    clawdata.bc_lower[1] = 'extrap'   # at zlower
     clawdata.bc_upper[1] = 'user'   # at yupper
-
-
-
-    # ---------------
-    # Gauges:
-    # ---------------
-    gauges = rundata.gaugedata.gauges
-    # for gauges append lines of the form  [gaugeno, x, y, t1, t2]
-
-    xgauges = np.linspace(clawdata.lower[0]+1, clawdata.upper[0]-1,
-                            np.rint(probdata.domain_width/1e3))
-    ngauges = len(xgauges)
-
-    # sea floor:
-    for gaugeno,x in enumerate(xgauges):
-        gauges.append([gaugeno,x,0.5*probdata.water_scaling*dy/8.0/4.0/2.0,0,1e10])
-
-    # water_surface:
-    for gaugeno,x in enumerate(xgauges):
-        gauges.append([ngauges+gaugeno,x,clawdata.upper[1]-1,0,1e10])
 
     # --------------
     # Checkpointing:
@@ -328,14 +330,13 @@ def setrun(claw_pkg='amrclaw'):
     amrdata = rundata.amrdata
 
     # max number of refinement levels:
-    amrdata.amr_levels_max = 4
+    amrdata.amr_levels_max = 3
 
     # List of refinement ratios at each level (length at least
     # amr_level_max-1)
-    amrdata.refinement_ratios_x = [8,4,2] # NOTE: if you change this, you should
-    amrdata.refinement_ratios_y = [8,4,2] # change where the water gauges are
-    amrdata.refinement_ratios_t = [8,4,2]
-
+    amrdata.refinement_ratios_x = [8,2]
+    amrdata.refinement_ratios_y = [8,2]
+    amrdata.refinement_ratios_t = [8,2]
 
     # Specify type of each aux variable in amrdata.auxtype.
     # This must be a list of length num_aux, each element of which is one
@@ -369,10 +370,41 @@ def setrun(claw_pkg='amrclaw'):
     # refined)
     # (closer to 1.0 => more small grids may be needed to cover flagged
     # cells)
-    amrdata.clustering_cutoff =0.7
+    amrdata.clustering_cutoff = 0.7
 
     # print info about each regridding up to this level:
     amrdata.verbosity_regrid = 0
+
+
+    # ---------------
+    # Gauges:
+    # ---------------
+    gauges = rundata.gaugedata.gauges
+    # for gauges append lines of the form  [gaugeno, x, y, t1, t2]
+
+    xgauges = np.linspace(clawdata.lower[0]+1, clawdata.upper[0]-1,
+                            np.rint(probdata.domain_width/1e3))
+    ngauges = len(xgauges)
+
+    # ocean floor:
+    dz_level2 = dz/amrdata.refinement_ratios_y[0]
+
+    for gaugeno,x in enumerate(xgauges):
+        gauges.append([gaugeno,x,zlower_ocean - 0.5*dz_level2,0,1e10])
+
+    # ocean surface:
+    dz_level3 = dz_level2/amrdata.refinement_ratios_y[1]
+    for gaugeno,x in enumerate(xgauges):
+        gauges.append([ngauges+gaugeno,x,-0.5*dz_level3,0,1e10])
+
+    # set gauge output increment to match rest of domain
+    if clawdata.output_style==1:
+        rundata.gaugedata.min_time_increment = clawdata.tfinal/clawdata.num_output_times
+
+    elif clawdata.output_style == 2:
+        rundata.gaugedata.min_time_increment = min(
+            np.array(clawdata.output_times[1:]) -
+            np.array(clawdata.output_times[0:-1]) )
 
 
     # ---------------
@@ -382,17 +414,25 @@ def setrun(claw_pkg='amrclaw'):
     # to specify regions of refinement append lines of the form
     #  [minlevel,maxlevel,t1,t2,x1,x2,y1,y2]
 
-    ## Region for the fault
-    regions.append([amrdata.amr_levels_max-1,amrdata.amr_levels_max-1,
-                    0,rupture_rise_time,
+    # Region for the fault
+    regions.append([amrdata.amr_levels_max-1, amrdata.amr_levels_max-1,
+                    0,clawdata.dt_initial, #rupture_rise_time,
                     fault_center-0.5*fault_width,fault_center+0.5*fault_width,
                     -fault_depth-dx, -fault_depth+dx])
 
-    # Only allow highest-refined level in water
-    regions.append([1,amrdata.amr_levels_max-1,
-                    0,1e9,
-                    -1e9,1e9,
-                    -1e9,0.0])
+    # Debug
+    # regions.append([1,amrdata.amr_levels_max-1,
+    #                 0,1e9,
+    #                 -1e9,1e9,
+    #                 zlower_ocean,1e9])
+
+
+    # Region for shelf (if exists)
+    if (zlower_shelf > zlower_ocean):
+        regions.append([1, amrdata.amr_levels_max-1,
+                        0,1e9,
+                        -1e9, 1e9,
+                        -1e9, zlower_ocean])
 
 
     #  ----- For developers -----
