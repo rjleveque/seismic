@@ -38,3 +38,35 @@ for k,gno in enumerate(gaugenos):
 
 tight_layout()
 savefig('v_gauges.png')
+
+figure(312, figsize=(13,8))
+clf()
+
+for k,gno in enumerate(gaugenos):
+    g1 = GaugeSolution(gauge_id=gno, path=outdir1)
+    g2 = GaugeSolution(gauge_id=gno, path=outdir2)
+    subplot(3,3,k+1)
+    plot(g1.t, (g1.q[0,:] + g1.q[1,:])/1e6, 'r', lw=1.5, label=label1)
+    plot(g2.t, (g2.q[0,:] + g2.q[1,:])/1e6, 'b', lw=0.8, label=label2)
+    title('trace(sigma)/1e6 at Gauge %s' % gno)
+    if k==0: legend(loc='lower left')
+    #ylim(-4.5,3)
+
+tight_layout()
+savefig('tracesigma_gauges.png')
+
+figure(313, figsize=(13,8))
+clf()
+
+for k,gno in enumerate(gaugenos):
+    g1 = GaugeSolution(gauge_id=gno, path=outdir1)
+    g2 = GaugeSolution(gauge_id=gno, path=outdir2)
+    subplot(3,3,k+1)
+    plot(g1.t, g1.q[2,:]/1e6, 'r', lw=1.5, label=label1)
+    plot(g2.t, g2.q[2,:]/1e6, 'b', lw=0.8, label=label2)
+    title('sig12/1e6 at Gauge %s' % gno)
+    if k==0: legend(loc='lower left')
+    #ylim(-4.5,3)
+
+tight_layout()
+savefig('sig12_gauges.png')

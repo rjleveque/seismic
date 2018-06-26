@@ -32,6 +32,29 @@ c
           aux(2,i,j) = 1.d0/(w1/alam1 + w2/alam2)
           aux(3,i,j) = w1*amu1 + w2*amu2
 
+          dlayer = 0.d0  ! depth of sediment layer
+          if (dlayer > 0.d0) then
+              xc = xlower + (i-0.5d0)*dx
+              yc = ylower + (j-0.5d0)*dy
+              yseafloor = -10000. + 6000.*(xc+40.d3)/80.d3
+              if (yc >= yseafloor) then
+                  w1 = 1.d0
+                  !aux(3,i,j) = 0.d0
+                else if (yc < yseafloor - dlayer) then
+                  w1 = 0.d0
+                  !aux(3,i,j) = amu2
+                else 
+                  w1 = 1.d0 - (yseafloor-yc)/dlayer
+                  !aux(3,i,j) = (yseafloor-yc) * amu2 / dlayer
+                endif
+              w2 = 1.d0 - w1
+              aux(1,i,j) = w1*rho1 + w2*rho2
+              !aux(2,i,j) = w1*alam1 + w2*alam2
+              aux(2,i,j) = 1.d0/(w1/alam1 + w2/alam2)
+              aux(3,i,j) = w1*amu1 + w2*amu2
+            endif
+
+
 !         if (amu1*amu2 > 0.d0) then
 !             aux(3,i,j) = 1.d0/(w1/amu1 + w2/amu2)
 !           else if (w1==0.d0) then

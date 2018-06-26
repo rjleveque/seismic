@@ -313,6 +313,15 @@ def setplot(plotdata):
     plotitem.plotstyle = 'b-'
 
 
+    #-----------------------------------------
+    # Figures for gauge comparison
+    #-----------------------------------------
+    otherfigure = plotdata.new_otherfigure(name='v gauges',
+                    fname='v_gauges.png')
+    otherfigure = plotdata.new_otherfigure(name='sig11 gauges',
+                    fname='sig11_gauges.png')
+
+
 
     # Parameters used only when creating html and/or latex hardcopy
     # e.g., via clawpack.visclaw.frametools.printframes:
