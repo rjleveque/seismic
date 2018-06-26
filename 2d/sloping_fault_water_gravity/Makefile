@@ -63,7 +63,6 @@ SOURCES = \
   mapc2p.f90 \
   src2.f90 \
 	b4step2.f90 \
-	$(SEISLIB)/tick.f \
   $(CLAW)/seismic/src/rp/rpn2_vc_elasticity_mapped_fault_abl.f90 \
   $(CLAW)/seismic/src/rp/rpt2_vc_elasticity_mapped_fault_abl.f90
 
